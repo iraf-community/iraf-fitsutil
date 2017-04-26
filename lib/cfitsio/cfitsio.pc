@@ -1,0 +1,11 @@
+prefix=/u3/iraf/repo-v216.build/active/fitsutil/lib/cfitsio
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: cfitsio
+Description: FITS File Subroutine Library
+Version: 3.37
+Libs: -L${libdir} -lcfitsio 
+Libs.private: -lm
+Cflags: -I${includedir}

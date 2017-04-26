@@ -1,0 +1,234 @@
+MEF INTERFACE
+
+The Multiple Extensions FITS (MEF) interface consist of a number
+of routines to mainly read a FITS Primary Data Unit or an Extension
+Unit and manipulate the data at a file level. Is up to the application
+to take care of any details regarding data structuring and manipulation.
+For example, the MEF interface will read a BINTABLE extension and give to
+the calling program a set of parameters like dimensionality, datatype, header
+buffer pointer and data portion offset from the beginning of the file.
+
+So far the routines available to an SPP program are:
+
+      mef = mef_open       (fitsfile, acmode, oldp)
+	    mef_rdhdr      (mef, group, extname, extver)
+	    mef_rdhdr_exnv (mef,extname, extver)
+	    mef_wrhdr      (mefi, mefo, in_phdu)
+[irdb]val = mefget[irdb]   (mef, keyword)
+	    mefgstr        (mef, keyword, outstr, maxch)
+	    mef_app_file   (mefi, mefo)
+	    mef_copy_extn  (mefi, mefo, group)
+	    mef_dummyhdr   (fd, hdrfname)
+
+
+
+INITIALIZE
+
+mef = mef_open (fitsfile, acmode, oldp)
+    
+	Initializes the MEF interface and it should be the
+	first routine to be called when making operations on FITS files
+	using these set of routines. Returns a pointer to the mef structure.
+
+	fitsfile. 
+	Pathname to the FITS file to be open. The general syntax is:
+
+	    dir$root.extn[group]
+
+	    dir: Directory name where the file resides
+	    root: Rootname
+	    extn: (optional) Extension name. Can be any extension string 
+	    group: Extension number to be openned. 
+		
+	    The '[group]' string is optional and is not part of the disk
+	    filename. It is used to specified which extension number to 
+	    open. The extension number is zero based. Zero for the primary
+	    extension, 1 for the first extension and so on.
+
+	acmode. 
+	The access mode of the file. The posible values are:
+
+	    READ_ONLY
+	    READ_WRITE
+	    APPEND
+	    NEW_FILE
+
+	oldp. 
+	Not used. Reserve for future use.
+
+
+HEADER ROUTINES
+
+mef_rdhdr (mef, group, extname, extver)
+
+	Read the FITS header on a MEF file that matches the EXTNAME or
+	EXTVER keyword values or if not specified, reads the extension
+	number 'group'. If no extension is found an error is posted.
+	After reading the header the file pointer is position at the end
+	of the last data FITS block (2880 bytes).
+
+	mef. 
+	The Mef pointer returned by mef_open. When the routine returns, all of
+	the elements of the MEF structure will have values belonging
+	to the header just read.
+
+	group.
+	The extension number to be read. Zero for the Primary data unit,
+	1 for the first extension and so on. If you want to find out an
+	extension by the value of extname and/or extver then 'group'
+	should be -1.
+
+	extname.
+	The string that will match the EXTNAME value of any extension. The
+	first match is the extension header returned.
+
+	extver.
+	The integer value that will match the EXTVER value of any extension.
+	If 'extname' is not null then both values need to match before
+	the routine returns. If there are no value to match then 'extver'
+	should be INDEFL.
+
+
+ 
+mef_rdhdr_gn (mef,group)
+  
+	Read extension number 'group'. If the extension number does not
+	exists, an error is posted.
+
+	mef. 
+	The Mef pointer returned by mef_open. When the routine returns, all of
+	the elements of the MEF structure will have values belonging
+	to the header just read.
+
+	group.
+	The extension number to be read. Zero for the Primary data unit,
+	1 for the first extension and so on.
+
+
+
+ 
+mef_rdhdr_exnv (mef,extname, extver)
+  
+	Read group based on the Extname and Extver values. If the group
+	is not encountered, an error is posted.
+
+	mef. 
+	The Mef pointer returned by mef_open. When the routine returns, all of
+	the elements of the MEF structure will have values belonging
+	to the header just read.
+
+	extname.
+	The string that will match the EXTNAME value of any extension. The
+	first match is the extension header returned.
+
+	extver.
+	The integer value that will match the EXTVER value of any extension.
+	If 'extname' is not null then both values need to match before
+	the routine returns. If there are no value to match then 'extver'
+	should be INDEFL.
+
+
+mef_wrhdr (mefi, mefo, in_phdu)
+  
+	Append the header from an input PHU or EHU to output file.
+
+	'mefi'. 
+	The input file mef pointer returned by mef_open. The header 
+	should have been read by now.
+
+	'mefo'. 
+	The output file mef pointer returned by mef_open. 
+
+	'in_phdu'.
+	Boolean value (true, false) stating whether the input header
+	is the primary header or not.
+
+ 
+[irdb]val = mefget[irdb] (mef, keyword)
+  
+        [irdb]: integer, real, double or boolean
+
+	Get a FITS header keyword value of the specified datatype; for
+	example 'imgeti (mef, "NCOMB")' will return an integer value
+	from the keyword 'NCOMB'.
+
+	'mef'. 
+	The input file mef pointer returned by mef_open. The header 
+	should have been read by now.
+
+	'keyword'
+	The input string (case insensitive) keyword from which to return 
+	its value.
+
+ 
+mefgstr (mef, keyword, outstr, maxch)
+  
+  char    card[ARB]               #I FITS card to be decoded
+  char    outstr[ARB]             #O output string to receive parameter value
+  int     maxch                   #I length of outstr
+
+	Get the string value of a FITS encoded card.  Strip leading
+	and trailing whitespace and any quotes.
+
+	'mef'. 
+	The input file mef pointer returned by mef_open. The header 
+	should have been read by now.
+
+
+	'keyword'
+	The input string (case insensitive) keyword from which to return 
+	its value.
+
+	'outstr'
+	The output string with the value of input keyword.
+
+	'maxch'
+	Lenght in chars of 'outstr'.
+
+
+FILE OPERATIONS
+
+mef_app_file (mefi, mefo)
+    
+	Appends a FITS file to an output file. If the file does
+	not exist, a dummy Primary Header unit is first created.
+
+	'mefi'. 
+	The input file mef pointer returned by mef_open. The header 
+	should have been read by now.
+
+	'mefo'. 
+	The output file mef pointer returned by mef_open. 
+
+
+mef_copy_extn (mefi, mefo, group)
+  
+	Copy a FITS extension given by its number 'group' into an
+	output file. If the file does not exists, this extension becames
+	a Primary Header Data unit of the output FITS file. If the
+	output file already exists, the input extension gets appended.
+
+	'mefi'. 
+	The input file mef pointer returned by mef_open. The header 
+	should have been read by now.
+
+	'mefo'. 
+	The output file mef pointer returned by mef_open. 
+
+        'group'.
+	The input extension number to be append to the output file.
+
+
+mef_dummyhdr (fd, hdrfname)
+  
+	Write a dummy Primary header Unit with no data to a new file.
+	Optionaly a header file with user keywords can be used.
+ 
+	'fd'
+	The output file descriptor.
+
+	'hdrfname'
+	The header filename. This is text file with a FITS header syntax
+	that will be appended to the file. Each FITS card does not have to
+	be of 80 characters long. The routine takes care of the correct
+	padding.

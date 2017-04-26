@@ -1,0 +1,7 @@
+# cfits parameters
+input,s,a,,,,Input list
+output,f,a,,,,Output file
+groups,s,a,,,,List of extensions
+new_file,b,h,yes,,,New output file?
+verbose,b,h,yes,,,Verbose
+mode,s,h,ql,,,

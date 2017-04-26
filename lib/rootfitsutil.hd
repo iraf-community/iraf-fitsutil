@@ -1,0 +1,8 @@
+# Root task entry for the IMCNV package help tree.  Defines `fitsutil'
+# as both a task and a package in the fitsutil help database.
+
+fitsutil	men  = fitsutil$fitsutil.men,
+		hlp  = fitsutil$fitsutil.men,
+		sys  = fitsutil$fitsutil.hlp,
+		pkg  = fitsutil$fitsutil.hd,
+		src  = fitsutil$fitsutil.cl

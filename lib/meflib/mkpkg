@@ -1,0 +1,24 @@
+$checkout libmef.a ../
+$update libmef.a
+$checkin libmef.a ../
+$exit
+
+libmef.a:
+#$set XFLAGS='-cfgq -p fitsutil'
+	mefopen.x 		<mef.h>
+	mefksection.x 		<mef.h> <ctotok.h> <lexnum.h>
+	mefrdhdr.x 		<mef.h> <error.h> <mach.h> <ctype.h> 
+	mefwrhdr.x 		<mef.h> <error.h>
+	mefclose.x		<mef.h>
+        mefgval.x               <mef.h>
+        mefgnbc.x               <mef.h>
+        mefget.x                <mef.h> <syserr.h> <ctype.h>
+        mefkfind.x              <mef.h>
+	mefappfile.x		<mef.h>
+	mefdummyh.x		<mef.h>
+	mefcpextn.x		<mef.h> <mach.h>
+	mefencode.x		<mef.h> <time.h>
+	mefsetpl.x		<mef.h>
+	mefwrpl.x		<mef.h>
+	mefldhdr.x		<mef.h>
+;

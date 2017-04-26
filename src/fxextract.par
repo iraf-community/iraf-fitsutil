@@ -1,0 +1,8 @@
+# fxextract parameters
+input,s,a,,,,Input list
+output,f,a,,,,Output filename
+groups,s,a,,,,List of extensions
+use_extnm,b,h,no,,,Use EXTNAME as output filename?
+phu,b,h,yes,,,Create a dummy PHU?
+verbose,b,h,yes,,,Verbose
+mode,s,h,ql,,,

@@ -1,0 +1,6 @@
+# finsert parameters
+input,s,a,,,,Input list
+output,f,a,,,,Output file
+groups,s,a,,,,List of extensions
+verbose,b,h,yes,,,Verbose
+mode,s,h,ql,,,

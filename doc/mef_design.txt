@@ -1,0 +1,123 @@
+Multiple Extension FITS files.			August 1997
+
+The MEF interface is a set of routines to manipulate single FITS files
+or Multiple Extensions FITS files. This interface complies with the
+FITS standard set by the NOST document.
+
+The MEF interface is an IRAF interface intended to be used within an SPP
+or Fortran program with the proper IRAF initialization routines.
+
+The user callable routines are:
+
+mef_open (filename, acmode, ofd)
+
+	Integer procedure returning a pointer to the MEF structure.
+
+	'filename'. Pathname to the target FITS filename. Pathname
+	            consist of
+	
+	     ldir$rootname.extn[group]
+
+	     ldir:  Logical directory
+	     root:  Rootname of the filename
+	     extn:  (Optional) FITS filename extension.
+	     group: (Optional) The FITS extension number. Zero correspond
+		    to the the Primary Header Unit, 1 to the first 
+		    extension on so on. If you specify group, the '[]' are
+		    required.
+		
+
+	'acmode'. Access mode of the target file. It could READ_ONLY,
+	          READ_WRITE, NEW_FILE or APPEND.
+
+	'ofd'. Not used at the moment. Reserve for future use.
+
+	mef = mef_open (filename, acmode, ofd|hsize)
+
+	The MEF structure pointed by 'mef' consists of the following
+	elements:
+
+
+       	MEF_FD           # File descriptor
+       	MEF_HOFF         # Header offset in chars
+       	MEF_ACMODE       # Access mode
+       	MEF_ENUMBER      # Absolute extension number
+       	MEF_EXTVER       # EXTVER keyword value
+       	MEF_CGROUP       # Current group read
+       	MEF_HSIZE        # Header size
+       	MEF_HDRP         # Header area pointer
+        MEF_POFF         # Offset to pixel area in chars
+       	MEF_NDIM         # Unit dimensionality
+       	MEF_NAXIS        # Lenght of each exis
+       	MEF_BITPIX     	 # Value of BITPIX
+       	MEF_EXTTYPE      # XTENSION keyword value 
+       	MEF_FNAME        # Filename
+       	MEF_OBJECT       # OBJECT keyword value
+       	MEF_EXTNAME      # EXTNAME keyword value
+
+mef_close
+	mef_close (mef)
+
+	Free the memory allocated by mef_open and close the target
+	FITS file.
+
+mef_query
+	mef_query (filename, ext_type, datatype, object)  
+	
+	Mefopen already does this, the difference would be for example
+	that mef_query would just returns  its argument values. No need to
+	open and close.
+
+	Another approach is to open the file, and mef_query would just 
+	return and value per request, for example
+
+mef_stati
+	val = mef_stati (mef, "EXT_TYPE")
+
+	to get the value of a mef descriptor element.
+
+mef_delete
+	Make a temporary copy of file and copy the rest of the
+	extensions. Delete the old one.
+	
+	mef_delete (mef)
+
+mef_rename
+	Considering that an extension is a portion of a file, renaming
+	would be limited to change the names of the EXTNAME and/or EXTVER
+	values. No extractions to a different filename would be allowed.
+
+	mef_rename (in_mef, oldname, new_name, unique(YES|NO))
+
+	Does the new_name need to be unique?
+
+mef_extract
+	Make a copy of an extension into a new or existent file.
+
+	mef_extract (file.fits[4], output_file, new|append)
+
+mef_insert
+	Insert an extension after an existent one. Again a temporary file
+	would be necessary to preserve the integrity of the target file.
+
+	mef_insert (in_mef, out_mef, out_extn)
+
+mef_overwrite
+	This would equivalent to delete an insert but only one temporary
+	file would be necessary.
+
+	mef_overwrite (in_mef, out_mef, out_extn)
+
+gethdkw 
+	Get keyword value, e.g.
+
+	real = gethdkwr (mef, keyword) 
+
+	val = gethdkw[bsird] (mef, keyword)
+	call gethdkwstring (mef, keyword, buf, max_size)
+
+puthdkw
+	Put keyword value (new or update value), e.g.
+
+	call puthdkw[bsird] (mef, keyword, value, comment)
+	call puthdkwstring (mef, keyword, value, max_size, comment)

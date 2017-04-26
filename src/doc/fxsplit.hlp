@@ -1,0 +1,41 @@
+.help fxsplit August97  fitsutil
+.ih
+NAME
+fxsplit -- Split a MEF file into single FITS files.
+.ih
+USAGE
+fxsplit input_list
+.ih
+PARAMETERS
+.ls input [string]
+Can be a list of FITS filenames. Output names will have the input root
+name plus a count.
+.le 
+.ls verbose = yes
+Print each operation as it takes place?
+.le
+.ih
+DESCRIPTION
+Fxsplit will split a FITS file with multiple extensions into individual
+FITS files. The output file names are similar to the input file but they
+will have a count number appended to the root name.
+.ih
+EXAMPLES
+.nf
+1. Split a MEF file that have 2 extensions.
+
+	im> fxsplit file3.fits
+
+   The output file are: file30.fits, file31.fits file32.fits	 
+
+2. To split 2 or more MEF files.
+
+	im> fxsplit g10.fits,msc.fits 
+
+.fi
+.ih
+BUGS
+.ih
+SEE ALSO
+fxcopy,imcopy
+.endhelp

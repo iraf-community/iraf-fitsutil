@@ -1,0 +1,55 @@
+.help fxdelete July97  fitsutil
+.ih
+NAME
+fxdelete -- Generic FITS multi-extension delete utility
+.ih
+USAGE
+fxdelete input_list groups
+.ih
+PARAMETERS
+.ls input [string]
+Can be a list of FITS filenames with or without extension number.
+.le 
+.ls groups = "" [string]
+Specify the list of extensions to delete from the those files without 
+explicit extension number. This list is applied to all input files.
+.le
+.ls verbose = yes
+Print each operation as it takes place?
+.le
+.ih
+DESCRIPTION
+Fdelete  will delete one or more FITS units in place from a
+Multiple extension file or a list of files.
+
+FITS extensions are numbered from zero -as the primary unit, with one as
+the first extension two as the second extension and so on.
+.ih
+NOTES
+Notice that if you delete the PHU (group zero), fxdelete will not create
+a dummy PHU on the modified file.
+.ih
+EXAMPLES
+.nf
+1. Delete group 3 from input.fits.
+
+	im> fxdelete input.fits[3]
+
+2. To delete extensions 1,3,5 from input file g10.fits.
+
+	im> fxdelete g10.fits groups="1,3,5"
+
+3. Delete extensions. Notice that for those files without an extension, the
+   group extension list applies.
+
+	im> fxdelete fa.fits,fb.fits[5],fc.fits groups="1,3,4"
+
+.fi
+.ih
+BUGS
+Fdelete does not accept EXTNAME or EXTVER values yet. Cannot delete PHU
+(group 0). 
+.ih
+SEE ALSO
+imcopy, fxheader
+.endhelp

@@ -1,0 +1,5 @@
+# fxplf parameters
+input,s,a,,,,Input list
+output,f,a,,,,Output file
+verbose,b,h,yes,,,Verbose
+mode,s,h,ql,,,

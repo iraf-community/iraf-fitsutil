@@ -1,0 +1,3 @@
+# bitstat parameter file
+images,s,a,"",,,Input image names
+output,s,a,"",,,Output file name

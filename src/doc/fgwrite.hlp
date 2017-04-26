@@ -1,0 +1,151 @@
+.help fgwrite Sep99 fitsutil
+.ih
+NAME
+fgwrite -- File archiver in FITS file
+.ih
+USAGE
+fgwrite input output 
+.ih
+PARAMETERS
+.ls input [string]
+List of filenames to be archive in the output FITS file.
+.le 
+.ls output [string] 
+Output Multiextension FITS file.
+.le
+.ls verbose = yes
+Print information about each input file processed.
+.le
+.ls group = ""
+The value of the FITS keyword FG_GROUP. It applies to all the FITS
+extensions in the MEF file. Its default value is the name of the
+current working directory.
+.le
+.ls types = ""
+Select input filenames by file type. The possible types are:
+.nf
+	t: text
+	b: binary
+	d: directory
+	s: symbolic link
+	f: single FITS file
+	m: Multiple Extension FITS file (MEF)
+
+.fi
+The default value is to select all types.
+.le
+.ls exclude = ""
+Exclude input filenames by file type. The file type are the same as above.
+Default action is to not exclude any type.
+.le
+.ls phu = yes
+Creates a Primary header unit (PHU). This is just a dummy header unit with
+no data to comply with a regular MEF structure file. A value of 'no' will
+create a MEF file without a PHU.
+.le
+.ls checksum = no
+Computes CHECKSUM and DATASUM. The default value is no. If the value is 'yes'
+the task creates the keyword CHECKSUM with 
+the checksum for the entire FITS unit as value and DATASUM keyword with
+the checksum of the data portion of the unit as value. For a description
+and algorithm that calculates these values please look in:
+"ftp://iraf.noao.edu/misc/checksum/checksum.ps"
+.le
+.ls toc = no
+Creates a table of content in the PHU. There is one line descriptor per
+input file. Here is a simple example:
+
+.nf
+
+Counter  offset size type level filename
+  1       1      1   ft   1     m.c
+  2       3      1   fb   1     t.o
+
+
+- 'offset' is the beginning of the extension header in units
+   of 2880 bytes.
+- 'size' is the size of the input file in units of 2880 bytes.
+- 'type' is the input filename type. The 2 character pnemonic
+   describes the kind of input file; 'f' is for FOREIGN FITS 
+   Xtension type and the second character is the type define 
+   above in 'types' parameters description. If the input file
+   is a MEF file the 'type' is one character: 'i' IMAGE, 't'
+   TABLE, 'b' BINTABLE, 'f' FOREIGN and 'o' for OTHER FITS 
+   XTENSION types.
+- 'level' is the directory depth in which the input file is located.
+- 'filename' is the input filename.
+
+.fi
+.le
+.ih
+DESCRIPTION
+Fgwrite is a program to encapsulate one file into a
+wrapper FITS Xtension called FOREIGN. If the input
+list has more than one input file, a MEF (Mutiple Extension FITS) file is
+created with one FOREIGN extension per input file.
+
+To accurately describe the input file within the FOREIGN extension, a set
+of FG keywords is created in the extension header in such a way that
+an extraction of the file is possible with all its properties restore.
+
+The FG keyword present in the FOREIGN extension header are:
+.ls FG_GROUP
+The group name that associates all of the elements of the MEF file. 
+The group name
+is arbitrary and is assigned by the user when the file group is written.
+.le
+.ls FG_FNAME
+The filename of the file associated with the current extension. The
+maximum filename lenght is 67 characters. For an extension of type
+foreign where the file type is a directory, FNAME is the name of the
+directory.
+.le
+.ls FG_FTYPE
+The physical file type ('text', 'binary', 'directory', or 'symlink'),
+or for native FITS extension, the FITS type ('FITS' or 'FITS-MEF').
+In the case of FITS-MEF, the EHU is the first element of a MEF group.
+No count of the number of extensions is given, rather, the MEF group
+consist of all subsequent extensions until an EHU is encountered which
+starts a new file.
+.le
+.ls FG_LEVEL
+The directory nesting level. All of the files in a directory are at the 
+same level. Level 1 is the root directory level.
+.le
+.ls FG_FSIZE
+The size in bytes of the input disk file.
+.le
+.ls FG_FMODE
+The file mode as a string ('rwx-rwx-rwx').
+.le
+.ls FG_FUOWN
+The file UID (user ID) as the file owner name string
+.le
+.ls FG_FUGRP
+The file GID (group ID).
+.le
+.ls FG_CTIME
+The file creation GMT time. 
+.le
+.ls FG_MTIME
+The file modification GMT time.
+.le
+.ih
+EXAMPLES
+1) Creates a MEF file 'mef.fits' with the default setup.
+
+	cl> fgwrite file1.for,test.c,obs.log mef.fits
+
+2) Create an archive of the current directory and its subdirectories
+   excluding any symbolic links.
+   
+   cl> fgwrite . ../zzd_arc.fits exclude=s checksum=yes
+   
+   The ckecksum option is set, so the keyword CHECKSUM, DATASUM and
+   CHECKVER will be present in all unit headers.
+.ih
+BUGS
+.ih
+SEE ALSO
+fgread
+.endhelp

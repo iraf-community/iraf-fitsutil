@@ -1,0 +1,5 @@
+# fdelete parameters
+input,s,a,,,,Input list
+groups,s,a,,,,List of extensions
+verbose,b,h,yes,,,Verbose
+mode,s,h,ql,,,

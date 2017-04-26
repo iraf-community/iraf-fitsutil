@@ -1,0 +1,42 @@
+.help fxplf March00 fitsutil
+.ih
+NAME
+fxplf -- Convert a mask or pixel list file into a FITS extension
+.ih
+USAGE
+fxplf input output
+.ih
+PARAMETERS
+.ls input [string]
+Can be a list of 'pl' filenames or just one pl file.
+.le 
+.ls output [string] 
+Output FITS filename. 
+.le
+.ls verbose = yes
+Print each operation as it takes place?
+.le
+.ih
+DESCRIPTION
+Fxplf will create a new BINTABLE extension on a new or existent FITS
+file. The 'pl' data is located in the 'heap' area of the extension 
+and the BINTABLE data consists of one entry with 2 integers. The first 
+integer is the number of 16bits  integers  in the heap and the second
+is the offset from the last BINTABLE data block.
+
+If the output FITS file does not exist, a dummy primary FITS header is 
+created before appending the BINTABLE extension.
+.ih
+EXAMPLES
+1. To put together all of the Pixel list files starting with 'f'
+into one new output FITS file.
+
+	im> fxplf f*.pl bigplf.fits 
+
+.ih
+BUGS
+Fxcopy does not accept sections in the filename nor extension numbers. 
+.ih
+SEE ALSO
+
+.endhelp
