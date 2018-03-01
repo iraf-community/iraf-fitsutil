@@ -127,7 +127,7 @@ char	*argv[];
 	static	char	*def_flist[1] = {NULL};
 	char	*argp, **flist, *arg, *ip;
 	pointer kwdb, kwtoc;
-	char    card[256];
+	char    card[SZ_PATHNAME];
 	char    *sline;
 	int	argno, ftype, i, ncards, level, phu;
 
