@@ -1,10 +1,10 @@
 # CFITSIO -- Update the CFITSIO library.
 
-$call update
-$exit
+ update
+
 
 update:
-	$update   libcfitsio.a
+	   libcfitsio.a
 	;
 
 libcfitsio.a:
