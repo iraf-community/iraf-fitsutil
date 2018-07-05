@@ -3,25 +3,17 @@
 #   Special keywords recognized by IRAF mkpkg files:
 #
 #	mkpkg relink		update object library and link
-#	mkpkg linkonly		skip object library updates and just link
 #	mkpkg install		move executable to lib$
 #	mkpkg update		update object library, link, and move to lib$
 
 relink:
+install:
 update:
 
-$ifeq (hostid, unix)  !(date)  $endif
-
 #$update libmef.a
-$update libcfitsio.a
-
-$ifeq (hostid, unix)  !(date)  $endif
+$call install@cfitsio
 $exit
 
 libmef.a:
 	@meflib
-	;
-
-libcfitsio.a:		# builds libcfitsio.a and fpack/funpack
-	@cfitsio
 	;

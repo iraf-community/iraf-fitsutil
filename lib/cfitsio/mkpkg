@@ -1,17 +1,24 @@
-# CFITSIO -- Update the CFITSIO library.
+# Make the fpack and funpack utilities
+#
 
-$call update
+$call   link
 $exit
 
 update:
-	$update   libcfitsio.a
+	$call   install
 	;
 
-libcfitsio.a:
-	# cheat and use Makefile....
-	!(CFLAGS='$(HSI_CF) $(HSI_LF)' ; ./configure)
-	!make
-	!make fpack funpack
-	!/bin/cp  libcfitsio.a ../
-	!/bin/cp  fpack funpack ../../bin/
+link:
+	!cc -c $(HSI_CF) fpack.c
+	!cc -c $(HSI_CF) funpack.c
+	!cc -c $(HSI_CF) fpackutil.c
+	$link fpack.o fpackutil.o -h -lcfitsio -lm 
+	$link funpack.o fpackutil.o -h -lcfitsio -lm
+	!rm fpack.o funpack.o fpackutil.o
+	;
+
+install:
+	$call	link
+	$move	fpack.e fitsutilbin$fpack
+	$move	funpack.e fitsutilbin$funpack
 	;
