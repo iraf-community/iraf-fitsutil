@@ -269,7 +269,6 @@ char	*argv[];
 	/* Create Table Of Contents */
 	if (toc == YES) {
 	    slines = (char *) calloc (MAX_TOC, TOCLEN);
-	    ip = slines;
 	    maxcount = MAX_TOC;
 	    hdr_off = 2880;
 	    level = 1;
@@ -302,7 +301,7 @@ char	*argv[];
 	    /* Now add the Table of Content to this PHU */
 	    if (toc == YES) {
 		list_toc (kwdb);
-		free (ip);
+		free (slines);
 	    }
 
 	    ncards = kwdb_WriteFITS (kwdb, out);
@@ -1458,13 +1457,13 @@ int	usize;			/* FITS unit size		*/
 
         fsize = (fh->size+2879)/2880;	
 	c = level <= 9 ? level+'0' : level-10+'a';
-	sprintf (slines, "  %-4d %4d %4d %s %c %s",
-	    ++count, hdr_off/2880, fsize, type, c, gname(fh->name));
-	slines = slines + TOCLEN;
+	++count;
+	sprintf (slines+TOCLEN*(count-1), "  %-4d %4d %4d %s %c %s",
+		 count, hdr_off/2880, fsize, type, c, gname(fh->name));
 
 	if (count >= maxcount) {
 	    maxcount += MAX_TOC;
-	    slines= (char *)realloc (maxcount, TOCLEN);
+	    slines= (char *)realloc (slines, TOCLEN*maxcount);
 	}
 
 	if (ftype == FITS_MEF || ftype == FITS) {
@@ -1511,13 +1510,13 @@ pointer kwdb;        /* Output db */
 	if (count % 36 > 21) nb++;   /* add one more if necessary */
 
 	if (nb == 0) {
-	    for (s=slines-TOCLEN*count, k=count; k > 0; s+=TOCLEN,k--) {
+	    for (s=slines, k=count; k > 0; s+=TOCLEN,k--) {
 		kwdb_AddEntry (kwdb, "        ", s, "T","");
 	        if (verbose)
 	            printf("%s\n",s);
 	    }
 	} else {
-	    for (s=slines-TOCLEN*count, k=count; k > 0; s+=TOCLEN,k--) {
+	    for (s=slines, k=count; k > 0; s+=TOCLEN,k--) {
 	        sscanf (s, "%d %d", &i, &hoff);
 		hoff = hoff + nb;
 	        sprintf (line, "  %-4d %4d%s", i, hoff, s+11);
@@ -1578,15 +1577,14 @@ int	usize;		/* size of MEF PHDU */
 
 	    datasize =  pix_block (kwdb);
 	    ncards = ((ncards + 35)/36)*36;
-
-	    sprintf(slines,"  %-4d %4d %7.7c",++count, 
+	    ++count;
+	    sprintf(slines+TOCLEN*(count-1),"  %-4d %4d %7.7c",count,
 		(hdr_off+foff)/2880, ft);
 	    foff = foff + datasize * FBLOCK + ncards * CARDLEN;
 	    if (count >= maxcount) {
 		maxcount += MAX_TOC;
-		slines= (char *)realloc (maxcount, TOCLEN);
+		slines = (char *)realloc (slines, TOCLEN*maxcount);
 	    }
-	    slines = slines + TOCLEN;
 
 	    stat = lseek (fd, foff, SEEK_SET);
 	    if (stat < 0) {
