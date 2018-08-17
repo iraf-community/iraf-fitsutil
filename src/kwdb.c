@@ -1,5 +1,9 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <fcntl.h>
+#include <ctype.h>
 #include "kwdb.h"
 
 /*
@@ -146,13 +150,10 @@ struct kwdb {
 	Item *itab;		/* pointer to itab array */
 	char *sbuf;		/* pointer to string buffer */
 	int hashtbl[NTHREADS];	/* hash table */
-	int (*read)();		/* private file read function */
-	int (*write)();		/* private file write function */
+	ssize_t (*read)();		/* private file read function */
+	ssize_t (*write)();		/* private file write function */
 };
 typedef struct kwdb KWDB;
-
-extern char *mkstemp();
-extern int read(), write();
 
 static int hash();
 static int addstr();
