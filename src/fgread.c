@@ -1,25 +1,19 @@
 /* Copyright(c) 1986 Association of Universities for Research in Astronomy Inc.
  */
 
+#define _XOPEN_SOURCE
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <ctype.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <string.h>
 #include <pwd.h>
 #include <utime.h>
-/* #include <time.h> */
-
-#ifdef SYSV
 #include <time.h>
-#else
-#include <sys/time.h>
-#include <sys/timeb.h>
-#endif
 
-#if defined(MACOSX) || defined(__linux)
-#include <time.h>
-#endif
 
 #include "kwdb.h"
 static  long get_timezone();
@@ -245,7 +239,7 @@ char	*argv[];
 			    fprintf (stderr, "missing filename argument\n");
 			    exit (1);
 			}
-			in = open (*argp, 0);
+			in = open (*argp, O_RDONLY);
 			if (in == ERR) {
 			    fprintf (stderr, "cannot open `%s'\n", *argp);
 			    exit (1);
@@ -613,7 +607,7 @@ char    *type;			/* Foreign extension type, (bin, text..) */
 
 	tp = ctime (&fh->mtime);
 
-	fprintf (out, "%-4d %-10.10s %9d %-12.12s %-4.4s %s",
+	fprintf (out, "%-4d %-10.10s %9ld %-12.12s %-4.4s %s",
 	    count,type, fh->size, tp + 4, tp + 20, fh->name);
 	if (fh->linkflag && *fh->linkname) {
 	    fprintf (out, " -> %s ", fh->linkname);
@@ -889,21 +883,8 @@ int	ftype;
 static long
 get_timezone()
 {
-#ifdef SYSV
         extern  long timezone;
         tzset();
         return (timezone);
-#else
-#ifdef MACOSX
-        struct tm *tm;
-        time_t clock = time(NULL);
-        tm = localtime (&clock);
-        return (-(tm->tm_gmtoff));
-#else
-        struct timeb time_info;
-        ftime (&time_info);
-        return (time_info.timezone * 60);
-#endif
-#endif
 }
 
