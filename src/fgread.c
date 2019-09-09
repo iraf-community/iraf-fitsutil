@@ -469,6 +469,9 @@ char	 *type;			/* Extension type */
 
 	s = kwdb_GetValue (kwdb, "FG_MTIME");	
 
+	/* Not set by strptime(); tells mktime() to determine whether daylight
+	 * saving time is in effect */
+	tm.tm_isdst = -1;
 	strptime (s, "%Y-%m-%dT%T",&tm);
 	fh->mtime = mktime(&tm) - get_timezone();
 
