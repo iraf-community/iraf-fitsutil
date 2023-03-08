@@ -1,0 +1,46 @@
+.help sum32 September09  fitsutil
+.ih
+NAME
+sum32 -- Compute the 1's complement checksum for a list of files.
+.ih
+USAGE
+sum32 input
+.ih
+PARAMETERS
+.ls input [string]
+A list of files, often but not exclusively FITS images.
+.le 
+.ls verbose = no
+Report verbose information for each file?
+.le
+.ls nimages
+[Output] The number of images in the input list.
+.le
+.ih
+DESCRIPTION
+SUM32 computes the 32-bit 1's complement checksum for a list of files.
+This is the algorithm used for the standard FITS checksum [1].  Any 32-bit 
+checksum will generate a 10 digit hash value.  The special feature of the 1's
+complement checksum is that this hash is straightforward to invert (and
+thus is not suited to protect against explicit mischief).
+
+Since the checksum can be computed, it is possible to force a file's checksum
+to a specific value.  Without this feature it would be impossible to convey
+a checksum within the original file.  Files (typically FITS) that have been
+so treated will be reported as "sum_zeroed" in the task output.  The file
+size in bytes is also reported.
+.ih
+EXAMPLES
+.nf
+1. Report the 1's complement checksum for a list of files:
+
+	fitsutil> sum32 *.fits
+	sum_zeroed       584640 test1.fits.fz
+	1363490151       532800 test2.fits
+	2002849261       172800 test3.fits
+.fi
+.ih
+REFERENCES
+[1] http://fits.gsfc.nasa.gov/registry/checksum.html
+
+.endhelp

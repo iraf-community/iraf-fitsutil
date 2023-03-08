@@ -1,0 +1,54 @@
+.help fxinsert July97 fitsutil
+.ih
+NAME
+fxinsert -- Generic FITS multi-extension insert utility
+.ih
+USAGE
+fxinsert input output groups
+.ih
+PARAMETERS
+.ls input [string]
+Can be a list of FITS filenames with or without extension number.
+.le 
+.ls output [string] 
+Output filename. The extension number after which the input units are going to
+be inserted is required.
+.le
+.ls groups = "" [string]
+Specify the list of extensions to insert from the those files without 
+explicit extension number. This list is applied to all input files.
+.le
+.ls verbose = yes
+Print each operation as it takes place?
+.le
+.ih
+DESCRIPTION
+Finsert  will insert one or more FITS units after a specified extension
+number from the output file. A unit can be a whole FITS file or one extension.
+
+FITS extensions are numbered from zero -as the primary unit, with one as
+the first extension two as the second extension and so on.
+.ih
+EXAMPLES
+.nf
+1. Insert group 3 from input.fits after group 1 from output.fits file.
+
+	im> fxinsert input.fits[3] output.fits[1]
+
+2. To insert extensions 1,3,5 from input file g10.fits after group 5 from
+   g30.fits file.
+
+	im> fxinsert g10.fits g30.fits[5] groups="1,3,5"
+
+3. Insert files and extensions.
+
+	im> fxinsert fa.fits,fb.fits[5],fc.fits foutput.fits[3]
+
+.fi
+.ih
+BUGS
+Finsert does not accept EXTNAME or EXTVER values yet.
+.ih
+SEE ALSO
+imcopy, fxheader
+.endhelp

@@ -1,0 +1,4 @@
+# fxsplit parameters
+input,s,a,,,,Input list
+verbose,b,h,yes,,,Verbose
+mode,s,h,ql,,,

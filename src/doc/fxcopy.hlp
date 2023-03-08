@@ -1,0 +1,59 @@
+.help fxcopy May97 fitsutil
+.ih
+NAME
+fxcopy -- Generic FITS multi-extension copy utility
+.ih
+USAGE
+fxcopy input output groups
+.ih
+PARAMETERS
+.ls input [string]
+Can be a list of FITS filename or just one name if you are extracting 
+extensions from it. Filename extensions are require.
+.le 
+.ls output [string] 
+Output filename. 
+.le
+.ls groups = "" [string]
+Specify the list of extensions from the input file to be copied to the output
+file; this list follows the syntax of the ranges utilities; i.e. things
+like 1,2,3; 1-9 or 9,7,13,1-4 are acceptable. Also '0' to represent the
+Primary FITS unit is accepted.
+.le
+.ls new_file = yes
+Speficify whether to create a new output file or if new_file is 'no' to
+overwrite an existent one.
+.le
+.ls verbose = yes
+Print each operation as it takes place?
+.le
+.ih
+DESCRIPTION
+Fcopy is an extension to the 'imcopy' command allowing many input FITS
+files or selected extensions to be appended to an output FITS file.
+
+FITS extensions are numbered from zero -as the primary unit, with one as
+the first extension two as the second extension and so on.
+.ih
+EXAMPLES
+1. To put together all of the FITS files starting with 'f' into one new output
+file.
+
+	im> fxcopy f*.fits bigf.fits new_file=yes
+
+2. To copy extensions 1,3,5 from input file g10.fits into a new file. If you 
+want to append to an existent file, set 'new_file = no'.
+
+	im> fxcopy g10.fits g3.fit groups="1,3,5" new_file=yes
+
+3. Selected extensions from various input files.
+
+	im> fxcopy fa.fits[2],fb.fits[5],fb.fits[7] fall.fits
+
+.ih
+BUGS
+Fxcopy does not accept sections in the filename nor extension numbers. 
+.ih
+SEE ALSO
+imcopy, fxheader
+.endhelp

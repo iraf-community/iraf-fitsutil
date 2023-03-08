@@ -1,0 +1,24 @@
+# Help directory for the FITSUTIL package.
+
+$doc		= "fitsutil$src/doc/"
+$srcdir		= "fitsutil$src/"
+
+fitsutil	hlp="fitsutil$fitsutil.men"
+
+fxcopy		hlp=doc$fxcopy.hlp,	src=srcdir$fxcopy.x
+fxconvert	hlp=doc$fxconvert.hlp,	src=srcdir$fxconvert.x
+fxdelete	hlp=doc$fxdelete.hlp,	src=srcdir$fxdelete.x
+fxinsert	hlp=doc$fxinsert.hlp,	src=srcdir$fxinsert.x
+fxheader	hlp=doc$fxheader.hlp,	src=srcdir$fxheader.x
+fxextract	hlp=doc$fxextract.hlp,	src=srcdir$fxextract.x
+fxsplit		hlp=doc$fxsplit.hlp,	src=srcdir$fxsplit.x
+fxdummyh	hlp=doc$fxdummyh.hlp,	src=srcdir$fxdummyh.x
+fxplf		hlp=doc$fxplf.hlp,	src=srcdir$fxplf.x
+
+fpack		hlp=doc$fpack.hlp,	src=srcdir$fpack.cl
+funpack		hlp=doc$funpack.hlp,	src=srcdir$funpack.cl
+ricepack	hlp=doc$ricepack.hlp,	src=srcdir$ricepack.cl
+sum32		hlp=doc$sum32.hlp,	src=srcdir$sum32.cl
+
+fgwrite		hlp=doc$fgwrite.hlp,	src=srcdir$fgwrite.c
+fgread		hlp=doc$fgread.hlp,	src=srcdir$fgread.c

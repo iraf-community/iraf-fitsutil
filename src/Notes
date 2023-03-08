@@ -1,0 +1,97 @@
+
+fxcopy.x
+	Add local copy of ranges.x. The routines calls have now
+	an 'l' preappended to get_netx_number() and decode_ranges()
+
+	The to use these calls was to take advantage of the zero index
+	support on this calls.
+	Take the 'gz' support out.
+	mar.4.98 nz
+
+fxdelete.x
+fxinsert.x
+	Use the local copy of ranges that is in fxcopy.x
+	mar.4.98 nz
+
+        Version 1.0 released 4/98
+==================================================================
+
+fxrdhdr.x
+fxfwrhdr.x
+	Change the algorithm to skip extensions. Add new struct element
+	MEF_KEEPXT. When 'yes', it will not touch the header extension
+	and pass it to the output as is. Good for extracting extension
+	as they are.
+	aug.30.99 nz
+
+
+fgread.c,fgwrite.c
+	Added 2 new foreign task. There is a wrapper cl script for
+	each to allow parameter editing before executing the C program.
+
+	Version 1.2 release Sep99
+====================================================================
+
+fxheader.x
+	This task can now list FITS files that do not have filename
+	extensions; e.g. the file 'foof' exist and 'fxf foof' works
+	OK now.
+
+	You can omit the '.fits' extension now and the task would
+	work ok for complex files names like: 'foo_n12.fhf.fits'.
+
+	If the EXTNAME keyword is not located in within the first 36 cards
+	then its value would not get displayed. This bug has been fixed
+	now. Gemini files with MDF extension is one of this examples.
+	nz 2 Oct 2003
+
+===================================================================
+
+mefendecode.x
+	Put the lranges routines that where on pkg/fxfcopy.x to be
+	available to user application via meflib.a
+
+mefldhdr.x
+	New routine. Load a FITS header from a file descriptor into a
+	spool file.
+
+mefget.x/mefgetb()
+	add "errchk mef_findkw" to jump to the calling routine when
+	an error has occurred. If the keyword does not exist should give
+	and error rather than F.
+
+==============================================================
+
+catprhdr.x
+	Revised  the code to make much simpler. Change mef_rdhdr.x
+	to be a function now.  Jan.06.04
+
+nhedit.x
+        Added this temporary task until we put it somewhere else.
+	nz Dec 21, 04
+
+==================================================================
+
+lib/cfitsio
+ricepack.cl
+funpack.cl
+fpack.cl
+	Added tasks to perform FITS tile compression layered on CFITSIO/fpack.
+	Ricepack performs a streamlined tile compression using the Rice
+	algorithm.  Funpack will unpack any general tile compressed file.
+	Input/output can be uncompressed SIF or MEF FITS, IRAF .imh files,
+	or gzipped FITS.  General fpack support will follow after ongoing
+	CFITSIO development concludes, especially floating point support.
+	January 2010, R. Seaman
+
+sum32.cl
+sum32.c
+checksum.c
+	Added task to calculate FITS checksum.  This is also built into
+	FITS tile compression.
+	January 2010, R. Seaman
+
+doc
+	Help pages for these.
+	January 2010, R. Seaman
+

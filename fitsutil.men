@@ -1,0 +1,24 @@
+	fgread   - Read a MEF file with FOREIGN extensions
+	fgwrite  - Create a MEF file with FOREIGN extensions
+	fpack    - USE RICEPACK INSTEAD
+	funpack  - Uncompress a FITS file
+	fxconvert- Convert between IRAF image types.
+	fxcopy   - Copy FITS files or FITS extension to an output FITS file
+	fxdelete - Delete FITS extensions in place
+	fxdummyh - Create a dataless single FITS file
+	fxextract- Extract a FITS extension
+	fxheader - List one line of header description per FITS unit 
+	fxinsert - Insert FITS files or extensions into another MEF file
+	fxplf    - Converts a pixel list file into a BINTABLE extension
+	fxsplit  - Split a multiple extension FITS file into single FITS files
+	ricepack - Rice compress a FITS file
+	sum32    - Compute the 32-bit FITS 1's complement checksum
+
+The CFITSIO fpack command (http://heasarc.gsfc.nasa.gov/fitsio/fpack)
+is a general purpose tool that allows varying many compression options
+when creating tile compressed FITS files.  It is anticipated, however,
+that the great majority of astronomical usage will involve the Rice
+algorithm.  This release of IRAF FITSUTIL is focused on providing
+streamlined access to this functionality through the RICEPACK task.
+
+Please contact seaman@noao.edu with comments and questions.

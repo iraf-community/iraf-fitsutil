@@ -1,0 +1,85 @@
+	Installation of the FITSUTIL external package
+	--------------------------------------------------
+
+[1] The package is distributed as a compressed tar archive.
+
+	% ftp 140.252.1.1
+	login: anonymous
+	password: [your last name]
+	ftp> cd iraf/extern
+	ftp> get fitsutil.readme
+	ftp> binary
+	ftp> get fitsutil.tar.Z
+	ftp> quit
+
+	% uncompress fitsutil.tar
+
+    The readme.fitsutil file contains these instructions.
+
+[2] Create a directory to contain the FITSUTIL external package files.  This
+    directory should be outside the IRAF directory tree and must be owned
+    by the IRAF account.  In the following examples, this root directory
+    is named usr1:[fitsutil] (VMS) or  /local/fitsutil/ (UNIX).  Make the 
+    appropriate file name substitutions for your site.
+
+[3] Log in as IRAF and edit the extern.pkg file in the hlib directory to
+    define the package to the CL.  From the IRAF account, outside the CL,
+    you can move to this directory with the commands:
+
+	$ set def irafhlib			# VMS example
+	% cd $hlib				# UNIX example
+
+    Define the environment variable fitsutil to be the pathname to the fitsutil
+    root directory.  The '$' character must be escaped in the VMS pathname;
+    UNIX pathnames must be terminated with a '/'.  Edit extern.pkg to include:
+
+	reset fitsutil      = usr\$1:[fitsutil] # VMS example
+	reset fitsutil      = /local/fitsutil/	# UNIX example
+
+	task  fitsutil.pkg = fitsutil$fitsutil.cl
+
+    Near the end of the hlib$extern.pkg file, update the definition of helpdb
+    so it includes the fitsutil help database, copying the syntax already used
+    in the string.  Add this line before the line containing a closing quote:
+        
+                ,fitsutil$lib/helpdb.mip\
+
+[4] Log into the CL from the IRAF account and unpack the archive file.  Change
+    directories to the FITSUTIL root directory created above and use 'rtar':
+
+	cl> cd fitsutil
+	cl> softools
+	cl> rtar -xrf <archive>  where <archive> is the host name of the
+				 archive file or the IRAF tape
+				 device for tape distributions.
+
+   On VMS systems, an error message will appear ("Copy 'bin.generic' to
+   './bin fails") which can be ignored.  Also on VMS systems, the four
+   bin.'mach' directories created by rtar under [newimred.bin] can be
+   deleted.  UNIX sites should leave the symbolic link 'bin' in the FITSUTIL
+   root directory pointing to 'bin.generic' but can delete any of the 
+   bin.`mach' directories that won't be used.  The archive file can be
+   deleted once the package has been successfully installed.
+
+[5] When the archive has been unpacked, build the FITSUTIL package executable.  
+    The compilation and linking of the FITSUTIL package is done using the 
+    following command:
+
+	cl> mkpkg -p fitsutil update >& fitsutil.spool &
+
+    NOTE: On systems that concurrently support different architectures
+    (e.g., Suns, Convex), you must configure the system for the desired
+    architecture before issuing the above command.  SUN/IRAF sites must
+    execute a pair of 'mkpkg' commands for each supported architecture type.
+    The Unix environment variable IRAFARCH must be set as well before
+    compiling.  For example:
+
+	# Assuming IRAFARCH is set to ffpa
+	cl> mkpkg -p fitsutil ffpa
+	cl> mkpkg -p fitsutil update >& fitsutil.ffpa &
+	cl> mkpkg -p fitsutil f68881
+	# Now reset IRAFARCH to f68881 before continuing
+	cl> mkpkg -p fitsutil update >& fitsutil.f68881 &
+
+    The spool file(s) should be reviewed upon completion to make sure there
+    were no errors.  

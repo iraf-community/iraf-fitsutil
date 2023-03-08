@@ -1,0 +1,5 @@
+# Root help directory for the fitsutil packages.  This dummy package is
+# necessary in order to have `fitsutil' appear as a module in some package,
+# so that the user can type "help fitsutil" (with `fitsutil' given as a task).
+
+_fitsutil		pkg = fitsutil$lib/rootfitsutil.hd

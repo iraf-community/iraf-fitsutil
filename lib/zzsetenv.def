@@ -1,0 +1,7 @@
+# Global environment definitions for the FITSUTIL packages.
+
+reset	pkglibs			= "fitsutil$bin(arch)/,fitsutil$lib/"
+reset	fitsutilbin		= "fitsutil$bin(arch)/"
+reset	fitsutillibs		= "fitsutil$lib/"
+
+keep

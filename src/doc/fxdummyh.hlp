@@ -1,0 +1,36 @@
+.help fxdummyh August97  fitsutil
+.ih
+NAME
+fxdummyh -- Create a dataless PHU.
+.ih
+USAGE
+fxdummyh filename
+.ih
+PARAMETERS
+.ls filename [string]
+The name of your new dataless (NAXIS=0) FITS file.
+.le 
+.ls hdr_file [string]
+The name of your input ascii file containing a FITS like set of keywords and
+values. Each line needs to be standard FITS header keyword of up to 80
+character long per card. The task will take care of padding each card to 80
+characters.
+.le 
+.ih
+DESCRIPTION
+Fxdummyh will create a dataless Primary FITS file with an optional
+user header information.
+.ih
+EXAMPLES
+.nf
+1. Create a new dataless FITS file with user FITS header file.
+
+	im> fxdummyh file3.fits hdr_file=myhdr.txt
+
+.fi
+.ih
+BUGS
+.ih
+SEE ALSO
+fxcopy,imcopy
+.endhelp

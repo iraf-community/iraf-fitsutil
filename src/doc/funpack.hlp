@@ -1,0 +1,54 @@
+.help funpack August09  fitsutil
+.ih
+NAME
+funpack -- Uncompress a list of tile compressed FITS files.
+.ih
+USAGE
+funpack images
+.ih
+PARAMETERS
+.ls images
+A list of tile compressed FITS images (with '.fz' extensions).
+.le 
+.ls keep = no
+Preserve the input images?  By default the input files will be replaced
+by the corresponding tile compressed FITS files.
+.le
+.ls listonly = no
+List the types and contents (FITS HDUs) of the input files?
+.le
+.ls verbose = yes
+Print each operation as it takes place?  Data volume and timing will
+also be reported.
+.le
+.ls gzip = no
+Recompress output files with host gzip command?
+.le
+.ls nimages
+[Output] The number of images in the input list.
+.le
+.ih
+DESCRIPTION
+Funpack will uncompress a list of tile compressed FITS files.
+The input file names must have ".fz" appended.  The output files
+will be standard FITS image files, either single images or MEFs.
+Optionally, the output files may be recompressed using the host
+gzip command.
+
+This task is a wrapper script for the CFITSIO funpack command.
+.ih
+EXAMPLES
+.nf
+1. Uncompress a tile compressed file:
+
+	im> funpack file3.fits.fz
+
+   The output file is: file3.fits
+
+.fi
+.ih
+BUGS
+.ih
+SEE ALSO
+ricepack, http://heasarc.gsfc.nasa.gov/fitsio/fpack
+.endhelp
