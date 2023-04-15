@@ -12,7 +12,7 @@ update:
 
 $ifeq (hostid, unix)  !(date)  $endif
 
-#$update libmef.a
+$update libmef.a
 $update libcfitsio.a
 
 $ifeq (hostid, unix)  !(date)  $endif
