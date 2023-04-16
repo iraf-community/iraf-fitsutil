@@ -1,28 +1,6 @@
 /* Copyright(c) 1986 Association of Universities for Research in Astronomy Inc.
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <sys/types.h>
-#include <string.h>
-#include <pwd.h>
-#include <utime.h>
-/* #include <time.h> */
-
-#ifdef SYSV
-#include <time.h>
-#else
-#include <sys/time.h>
-#include <sys/timeb.h>
-#endif
-
-#if defined(MACOSX) || defined(__linux)
-#include <time.h>
-#endif
-
-#include "kwdb.h"
-static  long get_timezone();
 /*
  * FGREAD -- Read a MEF FITS file created by fgwrite.
  *
@@ -54,6 +32,21 @@ static  long get_timezone();
  * would extract the FITS extension numbers indicated in the list. The list
  * should not have imbedded spaces.
  */
+
+#define _XOPEN_SOURCE
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <string.h>
+#include <pwd.h>
+#include <time.h>
+#include <utime.h>
+
+#include "kwdb.h"
 
 #define FBLOCK		2880
 #define NBLOCK		20
@@ -102,16 +95,16 @@ struct _modebits {
 	int	code;
 	char	ch;
 } modebits[] = {
-	0400,	'r',
-	0200,	'w',
-	0100,	'x',
-	040,	'r',
-	020,	'w',
-	010,	'x',
-	04,	'r',
-	02,	'w',
-	01,	'x',
-	0,	0
+	{0400,	'r'},
+	{0200,	'w'},
+	{0100,	'x'},
+	{040,	'r'},
+	{020,	'w'},
+	{010,	'x'},
+	{04,	'r'},
+	{02,	'w'},
+	{01,	'x'},
+	{0,	0}
 };
 
 
@@ -121,11 +114,11 @@ static int replace;		/* Replace existing files		*/
 static int printfnames;		/* Print file names			*/
 static int verbose;		/* Print everything			*/
 
-static int eof;
-static int nerrs;
-static char *file_list;
-static int nblocks;
+//static int eof;
+//static int nerrs;
+//static int nblocks;
 static int dlevel;		/* Directory level (1 == top) */
+static char *file_list;
 int	sums = NO;		/* Do not do checksum */
 int	count;
 
@@ -139,20 +132,36 @@ int	omitfitsmef=NO;		/* omit FITS-MEF files 	*/
 unsigned short sum16;
 unsigned int   sum32;
 
+
+static int getheader (int in, struct fheader *fh, int *ftype,
+                       pointer kwdb, char *type);
+static void get_uid (char *s, struct fheader *fh);
+static void get_gid (char *s, struct fheader *fh);
+static void printheader (FILE *out, struct fheader *fh, char *type);
+static int newfile (char *fname, struct fheader *fh, int ftype);
+static void copyheader (int out, pointer kwdb);
+static void copyfile (int in, int out, struct fheader *fh, int ftype);
+static void skipfile (int in, struct fheader *fh, pointer kwdb);
+static void get_range (char *list, int  *xarr);
+static int omit_ftype (int ftype);
+static long get_timezone (void);
+
+extern void checksum (unsigned char *buf, int length,
+                      unsigned short *sum16, unsigned int *sum32);
+extern int symlink (const char *oldpath, const char *newpath);
+
+
 /* MAIN -- "rtar [xtvlef] [names]".  The default operation is to extract all
  * files from the tar format standard input in quiet mode.
  */
-main (argc, argv)
-int	argc;
-char	*argv[];
+int
+main (int argc, char **argv)
 {
 	struct	fheader fh;
 	char	**argp;
-	char	*s, *ip, *p, type[20];
-	char	ascii[161];
+	char	*ip, *p, type[20];
 	int	in = 0, out, omitx;
 	int	ftype, ch, ncards, xarr[100], xcount;
-	int	epos,in_off,nbytes;
 	pointer kwdb;
 
 	int	stat, list;
@@ -208,7 +217,7 @@ char	*argv[];
 			    if (*p == 'm')
 				omitfitsmef = YES;
 			}
-			*argp++;
+			(void) *argp++;
 			break;
 		    case 't':		/* Include filetypes */
 			omittxt = YES;
@@ -233,12 +242,12 @@ char	*argv[];
 			    if (*p == 'm')
 				omitfitsmef = NO;
 			}
-			*argp++;
+			(void) *argp++;
 			break;
 		    case 'n':
 			/* Get list of extension numbers to read */
 			get_range (*argp, xarr);
-			*argp++;
+			(void) *argp++;
 			break;
 		    case 'f':
 			if (*argp == NULL) {
@@ -386,21 +395,20 @@ char	*argv[];
  * file header.  A checksum error on the file header is fatal and usually
  * indicates that the file was not properly transferred.
  */
-getheader (in, fh, ftype, kwdb, type)
-int	in;			/* input file			*/
-register struct	fheader *fh;	/* decoded file header (output)	*/
-int	*ftype;			/* file type			*/
-pointer  kwdb;
-char	 *type;			/* Extension type */
+static int
+getheader (
+    int	            in,		/* input file			*/
+    struct fheader *fh,	        /* decoded file header (output)	*/
+    int	           *ftype,	/* file type			*/
+    pointer         kwdb,
+    char	   *type 	/* Extension type */
+)
 {
-	register char *ip, *op;
-	register int n;
-	char    smode[SLEN];
-	int	ntrys, ncards, hsize, hpos, in_off;
+	int	ncards, hsize, hpos, in_off;
 	int	nbh, bks, i, recsize;
-	char	record[FBLOCK*NBLOCK];
 	char    *s, *p;
 	register struct	_modebits *mp;
+	unsigned char record[FBLOCK*NBLOCK];
 	struct tm tm;
 
 	int   mode=0;
@@ -501,11 +509,14 @@ char	 *type;			/* Extension type */
 	return (FBLOCK);
 }
 
+
 /* GET_UID -- Get the uid for a user name .
 */ 
-get_uid (s, fh)
-char	*s;
-register struct	fheader *fh;	/* decoded file header (output)	*/
+static void
+get_uid (
+    char *s,
+    struct fheader *fh	/* decoded file header (output)	*/
+)
 {
 	static      int uid;
 	static      char owner[SZ_OWNERSTR+1]={'\0'};
@@ -521,12 +532,12 @@ register struct	fheader *fh;	/* decoded file header (output)	*/
 
 	if (!strncmp(s, "<unknown>", 9)) {
 	    fh->uid = getuid();
-	    return (0);
+	    return;
 	}
 
 	if (!strcmp(s,owner)) {;
 	    fh->uid = uid;
-	    return (0);
+	    return;
 	} else {
 	    /* setpwent();  */
 	    pw = getpwnam (s);
@@ -541,11 +552,14 @@ register struct	fheader *fh;	/* decoded file header (output)	*/
 	}
 }
 
+
 /* GET_GID -- Get the gid for a user name .
 */ 
-get_gid (s, fh)
-char	*s;
-register struct	fheader *fh;	/* decoded file header (output)	*/
+static void
+get_gid (
+    char *s,
+    struct fheader *fh	/* decoded file header (output)	*/
+)
 {
 	static      int gid;
 	static      char owner[SZ_OWNERSTR+1]={'\0'};
@@ -561,12 +575,12 @@ register struct	fheader *fh;	/* decoded file header (output)	*/
 
 	if (!strncmp(s, "<unknown>", 9)) {
 	    fh->uid = getgid();
-	    return (0);
+	    return;
 	}
 
 	if (!strcmp(s,owner)) {;
 	    fh->gid = gid;
-	    return (0);
+	    return;
 	} else {
 	    /* setpwent();  */
 	    pw = getpwnam (s);
@@ -581,39 +595,23 @@ register struct	fheader *fh;	/* decoded file header (output)	*/
 	}
 }
 
-/*
-struct _modebits {
-	int	code;
-	char	ch;
-} modebits[] = {
-	040000,	'd',
-	0400,	'r',
-	0200,	'w',
-	0100,	'x',
-	040,	'r',
-	020,	'w',
-	010,	'x',
-	04,	'r',
-	02,	'w',
-	01,	'x',
-	0,	0
-};
-*/
 
 /* PRINTHEADER -- Print the file header in either short or long (verbose)
  * format, e.g.:
  *		drwxr-xr-x  9 tody         1024 Nov  3 17:53 .
  */
-printheader (out, fh, type)
-FILE	*out;			/* output file			*/
-register struct fheader *fh;	/* file header struct		*/
-char    *type;			/* Foreign extension type, (bin, text..) */
+static void
+printheader (
+    FILE *out,			/* output file			    */
+    struct fheader *fh,	        /* file header struct		    */
+    char *type			/* Foreign extn type, (bin, text..) */
+)
 {
 	char	*tp, *ctime();
 
 	tp = ctime (&fh->mtime);
 
-	fprintf (out, "%-4d %-10.10s %9d %-12.12s %-4.4s %s",
+	fprintf (out, "%-4d %-10.10s %9ld %-12.12s %-4.4s %s",
 	    count,type, fh->size, tp + 4, tp + 20, fh->name);
 	if (fh->linkflag && *fh->linkname) {
 	    fprintf (out, " -> %s ", fh->linkname);
@@ -626,13 +624,15 @@ char    *type;			/* Foreign extension type, (bin, text..) */
  * with the mode bits given.  Create all directories leading to the file if
  * necessary (and possible).
  */
-newfile (fname, fh, ftype)
-char	*fname;			/* pathname of file		*/
-register struct fheader *fh;	/* file header struct		*/
-int	ftype;			/* text, binary, director, etc	*/
+static int
+newfile (
+    char *fname,		/* pathname of file		*/
+    struct fheader *fh,	        /* file header struct		*/
+    int	ftype			/* text, binary, director, etc	*/
+)
 {
 	int	fd;
-	char	*cp, *cwd, dirname[MAXLINELEN];
+	char	*cwd, dirname[MAXLINELEN];
 	int	i, mode, fdirlevel;
 	
 	mode = fh->mode;
@@ -678,13 +678,16 @@ printf("chdir to '%s', fdirlevel: %d, dlevel: %d\n", fname, fdirlevel, dlevel);
 	return (fd);
 }
 
+
 /* COPYHEADER -- Copy the PHU of a FITS or FITS-MEF extension from a 
  * file created by fgwrite. We need to get rid of the FG_ keywords
  * before leaving.
  */
-copyheader (out, kwdb)
-int	out;			/* output file			*/
-pointer kwdb;
+static void
+copyheader (
+    int out,		        /* output file			*/
+    pointer kwdb
+)
 {
 	int ep, ncards, hdr_off, i;
 	char	card[CARDLEN];
@@ -735,23 +738,26 @@ pointer kwdb;
 	write (out, card, CARDLEN);
 }					 
 
+
 /* COPYFILE -- Copy bytes from the input (tar) file to the output file.
  * Each file consists of a integral number of FBLOCK size blocks on the
  * input file.
  */
-copyfile (in, out, fh, ftype)
-int	in;			/* input file			*/
-int	out;			/* output file			*/
-struct	fheader *fh;		/* file header structure	*/
-int	ftype;			/* text or binary file		*/
+static void
+copyfile (
+    int	in,			/* input file			*/
+    int	out,			/* output file			*/
+    struct fheader *fh,		/* file header structure	*/
+    int	ftype			/* text or binary file		*/
+)
 {
 	long	nbytes, bsize;
 	int	i, nblocks;
-	char	buffer[SZ_BUFFER], *p;
+	unsigned char buffer[SZ_BUFFER];
 
 	/* Link files are zero length on the tape. */
 	if (fh->linkflag)
-	    return (0);
+	    return;
 	
 	/* hsize is different from zero for FITS(-MEF) ftype only.
 	 * Also we copy the entire MEF file since its size
@@ -782,17 +788,18 @@ int	ftype;			/* text or binary file		*/
 		    fh->name);
 	    }
 	}
-
 }
 
 
 /* SKIPFILE -- Skip the current FITS unit up to the beginning of the
  * next.
  */
-skipfile (in, fh, kwdb)
-int	in;			/* input file			*/
-struct	fheader *fh;		/* file header			*/
-pointer kwdb;
+static void
+skipfile (
+    int	in,			/* input file			*/
+    struct fheader *fh,		/* file header			*/
+    pointer kwdb
+)
 {
 	int	datasize;
 	int     in_off;
@@ -807,9 +814,11 @@ pointer kwdb;
 /* GET_RANGE -- Parse a string with a list of ranges; e.g. 1,4,5-8,12
  * and put the expanded values in the integer array.
  */
-get_range (list, xarr)
-char *list;
-int  *xarr;
+static void
+get_range (
+    char *list,
+    int  *xarr
+)
 {
 	int   i,j,k,l, n;
 	char  *p;
@@ -851,10 +860,10 @@ int  *xarr;
 	xarr[j] = -1;
 }
 
+
 /* OMIT_FTYPE --  Omit the FITS extension of type ftype */
-int 
-omit_ftype (ftype)
-int	ftype;
+static int
+omit_ftype (int ftype)
 {
 	switch(ftype) {
 	case LF_SYMLINK:
@@ -889,21 +898,7 @@ int	ftype;
 static long
 get_timezone()
 {
-#ifdef SYSV
         extern  long timezone;
         tzset();
         return (timezone);
-#else
-#ifdef MACOSX
-        struct tm *tm;
-        time_t clock = time(NULL);
-        tm = localtime (&clock);
-        return (-(tm->tm_gmtoff));
-#else
-        struct timeb time_info;
-        ftime (&time_info);
-        return (time_info.timezone * 60);
-#endif
-#endif
 }
-
