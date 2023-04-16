@@ -12,6 +12,7 @@ libcfitsio.a:
 	!(CFLAGS='$(HSI_CF) $(HSI_LF)' ; ./configure)
 	!make
 	!make fpack funpack
-	!/bin/cp  libcfitsio.a ../
-	!/bin/cp  fpack funpack ../../bin/
+        $move libcfitsio.a fitsutilbin$libcfitsio.a
+        $move fpack fitsutilbin$fpack
+        $move funpack fitsutilbin$funpack
 	;
