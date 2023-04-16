@@ -23,7 +23,7 @@ relink:
 	    !cc -m32 $(HSI_LF) sum32.o checksum.o -o sum32
 	$else
             !cc -c $(HSI_CF) fgwrite.c fgread.c sum32.c checksum.c kwdb.c
-	    !cc fgwrite.o kwdb.o -o fgwrite.e
+	    !cc fgwrite.o kwdb.o checksum.o -o fgwrite.e
 	    !cc fgread.o kwdb.o checksum.o -o fgread.e
 	    !cc sum32.o checksum.o -o sum32
 	$endif
