@@ -1,3 +1,7 @@
+/* Copyright(c) 1986 Association of Universities for Research in Astronomy
+ * Inc.
+ */
+
 /* SUM32 -- accumulate the 32 bit and 16 bit 1's complement checksums
  * for a file.  Reports the checksums and their complements as well as
  * the size of the file.
@@ -27,25 +31,32 @@
 #define	ERR		0
 #define	OK		1
 
-main (argc, argv)
-int	argc;
-char	*argv[];
+static int checkfile (FILE *fp, unsigned short *sum16, unsigned int *sum32);
+static void print_usage (void);
+
+void checksum (unsigned char *buf, int length,
+               unsigned short *sum16, unsigned int *sum32);
+
+void char_encode (unsigned int value, char *ascii,
+                  int nbytes, int permute);
+
+
+int
+main (int argc, char *argv[])
 {
 	unsigned short	sum16;
 	unsigned int	sum32, tmp16;
-
 	register DIR	*dir;
-
 	int	size, len, iarg, i;
 	int	verbose=0, code=0, inverse=0, got_name=0, num_mode=0, permute=0;
-	char	name[SZ_PATHNAME], ascii[SZ_PATHNAME];
+	char    name[SZ_PATHNAME], ascii[SZ_PATHNAME];
 	FILE	*fp;
 
-/*	if (argc <= 1) {
- *	    print_usage ();
- *	    exit (-1);
- *	}
- */
+
+  	if (argc <= 1) {
+  	    print_usage ();
+  	    exit (-1);
+  	}
 
 	for (iarg=1; iarg < argc; iarg++) {
 	    len = strlen (argv[iarg]);
@@ -103,7 +114,7 @@ char	*argv[];
 		for (i=0; i < size; i++)
 		    name[i] = ascii[i] - 0x30;
 
-	    checksum (name, size, &sum16, &sum32);
+	    checksum ((unsigned char *)name, size, &sum16, &sum32);
 
 	} else if (! got_name) {
 	    size = checkfile (stdin, &sum16, &sum32);
@@ -159,10 +170,12 @@ char	*argv[];
 }
 
 
-int checkfile (fp, sum16, sum32)
-FILE		*fp;
-unsigned short	*sum16;
-unsigned int	*sum32;
+static int
+checkfile (
+    FILE *fp,
+    unsigned short *sum16,
+    unsigned int *sum32
+)
 {
 	char	record[BLOCK*RECORD];
 	int	size, recsize;
@@ -172,8 +185,8 @@ unsigned int	*sum32;
 	size = 0;
 
 	while (! feof (fp))
-	    if (recsize = fread (record, sizeof(char), BLOCK*RECORD, fp)) {
-		checksum (record, recsize, sum16, sum32);
+	    if ((recsize = fread (record, sizeof(char), BLOCK*RECORD, fp))) {
+		checksum ((unsigned char *)record, recsize, sum16, sum32);
 		size += recsize;
 	    }
 
@@ -181,7 +194,8 @@ unsigned int	*sum32;
 }
 
 
-print_usage ()
+static void
+print_usage (void)
 {
 	printf ("usage: sum32 [-v] [-c] [-p] [-i <ascii>] [<file>|<number>]\n");
 }
