@@ -112,7 +112,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <ctype.h>
-#include "kwdb.h"
 
 #define NTHREADS	797
 #define DEF_SZSBUF	32768
@@ -159,51 +158,17 @@ struct kwdb {
 };
 typedef struct kwdb KWDB;
 
-static int hash();
-static int addstr();
-static int streq();
+#include "kwdb.h"
+
+static int addstr (register KWDB *db, char *text);
+static int streq (register char *s1, register char *s2);
+static int hash (char *key);
 
 
 /*
  * Public functions.
  * -----------------
  */
-
-pointer kwdb_Open (char *kwdbname);
-void    kwdb_Close (pointer kwdb);
-char   *kwdb_Name (pointer kwdb);
-int     kwdb_Len (pointer kwdb);
-int     kwdb_AddEntry (pointer kwdb, char *keyword, char *value, 
-                       char *type, char *comment);
-int     kwdb_Lookup (pointer kwdb, char *keyword, int instance);
-char   *kwdb_GetValue (pointer kwdb, char *keyword);
-int     kwdb_SetValue (pointer kwdb, char *keyword, char *value);
-int     kwdb_SetComment (pointer kwdb, char *keyword, char *comment);
-char   *kwdb_GetComment (pointer kwdb, char *keyword);
-int     kwdb_SetType (pointer kwdb, char *keyword, char *type);
-char   *kwdb_GetType (pointer kwdb, char *keyword);
-int     kwdb_Head (pointer kwdb);
-int     kwdb_Tail (pointer kwdb);
-int     kwdb_Next (pointer kwdb, int ep);
-int     kwdb_DeleteEntry (pointer kwdb, int ep);
-int     kwdb_RenameEntry (pointer kwdb, int ep, char *newname);
-int     kwdb_CopyEntry (pointer kwdb, pointer o_kwdb, int o_ep, char *newname);
-int     kwdb_GetEntry (pointer kwdb, int ep, char **keyword, char **value,
-                       char **type, char **comment);
-char   *kwdb_KWName (pointer kwdb, int ep);
-
-pointer kwdb_OpenFITS (char *filename, int maxcards, int *nblank);
-int     kwdb_ReadFITS (pointer kwdb, int fd, int maxcards, int *nblank);
-int     kwdb_UpdateFITS (register KWDB *kwdb, char *filename,
-                         int update, int extend, int npad);
-int     kwdb_WriteFITS (KWDB *kwdb, int fd);
-void    kwdb_SetIO (register KWDB *kwdb,
-                    ssize_t (*readfcn)(), ssize_t (*writefcn)());
-
-static int addstr (register KWDB *db, char *text);
-static int streq (register char *s1, register char *s2);
-static int hash (char *key);
-
 
 /* KWDB_OPEN -- Open a new, empty keyword database.
  */
