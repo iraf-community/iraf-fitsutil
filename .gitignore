@@ -1,0 +1,64 @@
+# Compiled files
+*.py[cod]
+*.a
+*.e
+*.o
+*.so
+*.so.*
+__pycache__
+spool.*
+_spool*
+
+# Mac OSX
+.DS_Store
+
+# Other generated files
+*/cython_version.py
+htmlcov
+.coverage
+MANIFEST
+.ipynb_checkpoints
+
+# Sphinx
+docs/api
+docs/_build/
+
+# WingIDE
+*.wpr
+*.wpu
+
+# Eclipse editor project files
+.project
+.pydevproject
+.settings
+
+# Pycharm editor project files
+.idea
+
+# Packages/installer info
+*.egg
+*.egg-info
+dist/
+build/
+eggs
+.eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+distribute-*.tar.gz
+.pytest_cache
+.cache
+pip-wheel-metadata/
+
+# codecov
+.coverage
+*.coverage.*
+
+# Other
+*~
+.settings
+*.dylib
+*.swp
