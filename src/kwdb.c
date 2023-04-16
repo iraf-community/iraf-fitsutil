@@ -113,11 +113,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#define NTHREADS	797
-#define DEF_SZSBUF	32768
-#define	DEF_NKEYWORDS	512
-#define	MAX_HASHCHARS	18
-#define	SZ_FILEBUF	102400
 
 #define	COM_EP(db,p)	((p)-db->itab)
 #define	REF_EP(db,ep)	&db->itab[ep]
@@ -126,37 +121,6 @@ int primes[] = {
 	101,103,107,109,113,127,131,137,139,
 	149,151,157,163,167,173,179,181,191,
 };
-
-/* KWDB item descriptor. */
-struct item {
-	int name;		/* item name (optional) */
-	int value, vallen;	/* item value (optional) */
-	int type, typelen;	/* value type (optional) */
-	int comment, comlen;	/* item comment (optional) */
-	int nexthash;		/* next item in hash thread */
-	int nextglob;		/* next item in global list */
-};
-typedef struct item Item;
-
-typedef int  (*PFI)();
-
-struct kwdb {
-	int kwdbname;		/* database name */
-	int maxitems;		/* capacity of itab */
-	int nitems;		/* number of valid items */
-	int itemsused;		/* number of item slots used */
-	int sbuflen;		/* capacity of sbuf */
-	int sbufused;		/* sbuf characters used */
-	int head;		/* itab index of first item */
-	int tail;		/* itab index of last item */
-	Item *itab;		/* pointer to itab array */
-	char *sbuf;		/* pointer to string buffer */
-	int hashtbl[NTHREADS];	/* hash table */
-
-	ssize_t (*read)();	/* private file read function */
-	ssize_t (*write)();	/* private file write function */
-};
-typedef struct kwdb KWDB;
 
 #include "kwdb.h"
 
