@@ -56,14 +56,13 @@ summary:
 	;
 
 
-
 # IRAF multiple architecture support.
 # ----------------------------------------
 
 arch:					# show current float option
 showfloat:
 	$verbose off
-	!$(hlib)/mkfloat.csh
+	!$(hlib)/mkfloat.sh
 	;
 generic:				# generic installation (no bin)
 	$ifnfile (bin.generic)
@@ -71,24 +70,15 @@ generic:				# generic installation (no bin)
 	$endif
 	$verbose off
 	$set DIRS = "lib src"
-	!$(hlib)/mkfloat.csh generic -d $(DIRS)
+	!$(hlib)/mkfloat.sh generic -d $(DIRS)
 	;
-
-freebsd:                                # install FreeBSD binaries
-	$ifnfile (bin.freebsd)
-	    !mkdir bin.freebsd
-	$endif
-        $verbose off
-        $set DIRS = "lib src"
-        !$(hlib)/mkfloat.csh freebsd -d $(DIRS)
-        ;
 linux:                                  # install Slackwkare Linux binaries
 	$ifnfile (bin.linux)
 	    !mkdir bin.linux
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.csh linux -d $(DIRS)
+        !$(hlib)/mkfloat.sh linux -d $(DIRS)
         ;
 linux64:                                # install x86_64 binaries
 	$ifnfile (bin.linux64)
@@ -96,15 +86,15 @@ linux64:                                # install x86_64 binaries
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.csh linux64 -d $(DIRS)
+        !$(hlib)/mkfloat.sh linux64 -d $(DIRS)
         ;
-macosx:                                 # install Mac OS X (PPC) binaries
+macosx:                                 # install Mac OS X (Apple) binaries
 	$ifnfile (bin.macosx)
 	    !mkdir bin.macosx
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.csh macosx -d $(DIRS)
+        !$(hlib)/mkfloat.sh macosx -d $(DIRS)
         ;
 macintel:                               # install Mac OS X (Intel) binaries
 	$ifnfile (bin.macintel)
@@ -112,45 +102,13 @@ macintel:                               # install Mac OS X (Intel) binaries
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.csh macintel -d $(DIRS)
+        !$(hlib)/mkfloat.sh macintel -d $(DIRS)
         ;
-cygwin:                                 # install Cygwin binaries
-	$ifnfile (bin.cygwin)
-	    !mkdir bin.cygwin
+macos64:                                # install Mac OS X alt binaries
+	$ifnfile (bin.macos64)
+	    !mkdir bin.macos64
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.csh cygwin -d $(DIRS)
-        ;
-redhat:                                 # install Redhat Linux binaries
-	$ifnfile (bin.redhat)
-	    !mkdir bin.redhat
-	$endif
-        $verbose off
-        $set DIRS = "lib src"
-        !$(hlib)/mkfloat.csh redhat -d $(DIRS)
-        ;
-sparc:					# install sparc binaries
-	$ifnfile (bin.sparc)
-	    !mkdir bin.sparc
-	$endif
-	$verbose off
-	$set DIRS = "lib src"
-	!$(hlib)/mkfloat.csh sparc -d $(DIRS)
-	;
-ssun:					# install Sun/Solaris binaries
-	$ifnfile (bin.ssun)
-	    !mkdir bin.ssun
-	$endif
-	$verbose off
-	$set DIRS = "lib src"
-	!$(hlib)/mkfloat.csh ssun -d $(DIRS)
-	;
-sunos:                                  # install SunOS (Solaris x86) binaries
-	$ifnfile (bin.sunos)
-	    !mkdir bin.sunos
-	$endif
-        $verbose off
-        $set DIRS = "lib src"
-        !$(hlib)/mkfloat.csh sunos -d $(DIRS)
+        !$(hlib)/mkfloat.sh macos64 -d $(DIRS)
         ;
