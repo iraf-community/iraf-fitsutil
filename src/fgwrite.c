@@ -1,19 +1,6 @@
 /* Copyright(c) 1986 Association of Universities for Research in Astronomy Inc.
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <time.h>
-#include <strings.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <pwd.h>
-#include <grp.h>
-
-#include "kwdb.h"
-
 /*
  * FGWRITE -- Write a MEF files with FOREIGN Xtension type.
  *
@@ -31,6 +18,22 @@
  * Usage: "fgwrite [-t <tbdsfm>] [-o <tbdsfm>] [-vdih] [-g <group_name>]
  *		   [-f output_fits_file] [input_files]".
  */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <fcntl.h>
+#include <time.h>
+#include <strings.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <pwd.h>
+#include <grp.h>
+
+#include "kwdb.h"
 
 #define ERR		-1
 #define YES		1
@@ -81,16 +84,16 @@ struct _modebits {
 	int	code;
 	char	ch;
 } modebits[] = {
-	0400,	'r',
-	0200,	'w',
-	0100,	'x',
-	040,	'r',
-	020,	'w',
-	010,	'x',
-	04,	'r',
-	02,	'w',
-	01,	'x',
-	0,	0
+	{0400,	'r'},
+	{0200,	'w'},
+	{0100,	'x'},
+	{040,	'r'},
+	{020,	'w'},
+	{010,	'x'},
+	{04,	'r'},
+	{02,	'w'},
+	{01,	'x'},
+	{0,	0}
 };
 
 int	debug=NO;		/* Print debugging messages		*/
@@ -111,24 +114,50 @@ int	sums = NO;
 int     hdr_off;
 char    *slines;
 
-char	group[SLEN],*gname();
-char	*dname();
-static  char *str();
+char	group[SLEN];
+
+
+static void  putfiles (char *dir, int out, char *path, int *level);
+static void  fgfileout (char *fname, int out, int ftype, char *path, int level);
+static char *get_owner (int fuid);
+static char *get_group (int fuid);
+
+static void  get_checksum (int fd, long out_offset, int nbh,
+                           unsigned int *datasum);
+static void  printheader (FILE *fp, struct fheader *fh, char *type);
+static void  copyfile (int in, struct fheader *fh, int out, int ftype,
+                       int out_off, int nbp, unsigned int *datasum);
+
+static char *dname (char *dir);
+static int   filetype (char *fname);
+static int   fits_mef (char *fname, int filesize);
+static char *str (int n);
+static char *gname (char *name);
+static void  toc_card (struct fheader *fh, int ftype,
+                       int hd_cards, int level, int usize);
+static void  list_toc ( pointer kwdb);
+static int   list_mef (int fd, int usize);
+static int   pix_block (pointer kwdb);
+
+extern void checksum (unsigned char *buf, int length,
+                      unsigned short *sum16, unsigned int *sum32);
+extern void char_encode (unsigned int value, char *ascii,
+                         int nbytes, int permute);
+extern unsigned int add_1s_comp (unsigned int u1, unsigned int u2);
+
 
 /* MAIN -- "fgwrite [-t <tbdlfm>] [-o <tbflfm>] [-vd] [-f fitsfile] [files]".
  * If no files are listed the
  * current directory tree is used as input.  If no output file is specified
  * output is to the standard output.
  */
-main (argc, argv)
-int	argc;
-char	*argv[];
+int
+main (int argc, char *argv[])
 {
 	static	char	*def_flist[1] = {NULL};
 	char	*argp, **flist, *arg, *ip;
-	pointer kwdb, kwtoc;
+	pointer kwdb;
 	char    card[256];
-	char    *sline;
 	int	argno, ftype, i, ncards, level, phu;
 
 	flist       = def_flist;
@@ -342,15 +371,16 @@ done:
 /* PUTFILES -- Put the named directory tree to the output fitsfile.  We chdir
  * to each subdirectory to minimize path searches and speed up execution.
  */
-putfiles (dir, out, path, level)
-char	*dir;			/* directory name		*/
-int	out;			/* output file			*/
-char	*path;			/* pathname of curr. directory	*/
-int	*level;			/* directory level              */
+static void
+putfiles (
+    char *dir,			/* directory name		*/
+    int	out,			/* output file			*/
+    char *path,			/* pathname of curr. directory	*/
+    int	*level			/* directory level              */
+)
 {
 	char	newpath[SZ_PATHNAME+1];
 	char	oldpath[SZ_PATHNAME+1];
-	char	fname[SZ_PATHNAME+1];
 	int	ftype, dirl;
 	DIR	*dfd;
 	struct dirent  *dp;
@@ -366,7 +396,7 @@ int	*level;			/* directory level              */
 	    fflush (stdout);
 	    fprintf (stderr, "cannot open subdirectory `%s%s'\n", path, dir);
 	    fflush (stderr);
-	    return (0);
+	    return;
 	}
 
 	getcwd (oldpath, SZ_PATHNAME);
@@ -380,7 +410,7 @@ int	*level;			/* directory level              */
 	    fflush (stdout);
 	    fprintf (stderr, "cannot change directory to `%s'\n", newpath);
 	    fflush (stderr);
-	    return (0);
+	    return;
 	}
 
 	/* Put each file in the directory to the output file.  Recursively
@@ -410,12 +440,14 @@ int	*level;			/* directory level              */
 
 /* FGFILEOUT -- Write the named file to the output in FITS format.
 */
-fgfileout (fname, out, ftype, path, level)
-char	*fname;			/* file to be output	*/
-int	out;			/* output stream	*/
-int	ftype;			/* file type		*/
-char	*path;			/* current path		*/
-int	level;			/* directory level      */
+static void
+fgfileout (
+    char *fname,		/* file to be output	*/
+    int	out,			/* output stream	*/
+    int	ftype,			/* file type		*/
+    char *path,			/* current path		*/
+    int	level			/* directory level      */
+)
 {
 	struct  stat   fst;
 	struct	fheader fh;
@@ -424,35 +456,35 @@ int	level;			/* directory level      */
 	register struct	_modebits *mp;
 	char 	*tp, *fn, *get_owner(), *get_group();
 	pointer kwdb;
-	int	k, nbh, nbp, usize, in, get_checksum(), hdr_plus;
+	int	k, nbh, nbp, usize, in, hdr_plus;
 	long	in_off, out_off;
 	unsigned int datasum;
-	int	nkw, i, ep, status, ncards, pcount, hd_nlines, hd_cards;
+	int	nkw, i, ep, ncards, pcount, hd_nlines, hd_cards;
 
 	if (debug)
 	    printf ("put file `%s', type %d\n", fname, ftype);
 
 	switch(ftype) {
 	case LF_SYMLINK:
-	    if (omitsymlink) return (0);
+	    if (omitsymlink) return;
 	    break;
 	case LF_BIN:
-	    if (omitbin) return (0);
+	    if (omitbin) return;
 	    break;
 	case LF_TXT:
-	    if (omittxt) return (0);
+	    if (omittxt) return;
 	    break;
 	case LF_DIR:
-	    if (omitdir) return (0);
+	    if (omitdir) return;
 	    break;
 	case FITS:
-	    if (omitfits) return (0);
+	    if (omitfits) return;
 	    break;
 	case FITS_MEF:
-	    if (omitfitsmef) return (0);
+	    if (omitfitsmef) return;
 	    break;
 	default:
-	    return (0);
+	    return;
 	    break;
 	}
 
@@ -460,7 +492,7 @@ int	level;			/* directory level      */
 	    fflush (stdout);
 	    fprintf (stderr, "Warning: cannot open file `%s'\n", fname);
 	    fflush (stderr);
-	    return (0);
+	    return;
 	}
 
 	/* Format and output the file header.
@@ -479,7 +511,7 @@ int	level;			/* directory level      */
 	    fprintf (stderr, 
 		"Warning: could not stat file `%s'\n", fname);
 	    fflush (stderr);
-	    return (0);
+	    return;
 	}
 	fh.uid = fst.st_uid;
 	fh.gid = fst.st_gid;
@@ -515,7 +547,7 @@ int	level;			/* directory level      */
 	    fprintf (stderr, 
 		"Warning: Could not open EHU kwdb `%s'\n", fname);
 	    fflush (stderr);
-	    return (0);
+	    return;
 	}
 
 	hdr_plus = 0;
@@ -705,24 +737,21 @@ emptyfile:
 
 	/* Generate one liner for TOC */
 	if (toc)
-	    toc_card (in, &fh, ftype, hd_cards, level, usize);
+	    toc_card (&fh, ftype, hd_cards, level, usize);
 
 	/* Calculate the checksum now */
 	if (sums == YES)
 	    if ((toc==NO) && fh.size > 0 && !fh.isdir && !fh.linkflag)
 		get_checksum(out, out_off, nbh, &datasum);
-	
 
 	close (in);
 }
 
 /* GET_OWNER -- Obtain user name for the password file given the uid.
 */
-char *
-get_owner(fuid)
-int 	fuid;
+static char *
+get_owner (int fuid)
 {
-
 	/* Get owner name.  Once the owner name string has been retrieved
 	* for a particular (system wide unique) UID, cache it, to speed
 	* up multiple requests for the same UID.
@@ -752,9 +781,8 @@ int 	fuid;
 
 /* GET_GROUP -- Obtain group name for the file given the uid.
 */
-char *
-get_group(fuid)
-int 	fuid;
+static char *
+get_group(int fuid)
 {
 
 	/* Get owner name.  Once the owner name string has been retrieved
@@ -787,18 +815,20 @@ int 	fuid;
 /* CHECKSUM -- Calculate the checksum for a FITS extension unit, including
  * header and data.
 */
-get_checksum (fd, out_offset, nbh, datasum)
-int	fd;			/* file descriptor */
-long	out_offset;		/* offset of the beginning of FITS header */
-int	nbh;			/* number of FBLOCK of header */
-unsigned int *datasum;		/* datasum value */
+static void
+get_checksum (
+    int	fd,			/* file descriptor */
+    long out_offset,		/* offset of the beginning of FITS header */
+    int	nbh,			/* number of FBLOCK of header */
+    unsigned int *datasum	/* datasum value */
+)
 {
 	unsigned short	sum16;
 	unsigned int	sum32;
 	char	record[FBLOCK*NBLOCK];
 	char	ascii[161];
 	unsigned int add_1s_comp();
-	int	i, bks, ncards, ep, pos, recsize, permute;
+	int	i, bks, ncards, pos, recsize, permute;
 	pointer kwdb;
 
 	sum16 = 0;
@@ -814,11 +844,11 @@ unsigned int *datasum;		/* datasum value */
 	bks = nbh/NBLOCK;
 	for (i=1; i<=bks; i++) {
 	    recsize = read (fd, record, FBLOCK*NBLOCK);
-	    checksum (record, recsize, &sum16, &sum32);
+	    checksum ((unsigned char *)record, recsize, &sum16, &sum32);
 	}
 	if (nbh % NBLOCK != 0) {
 	    recsize = read (fd, record, (nbh % 10)*FBLOCK);
-	    checksum (record, recsize, &sum16, &sum32);
+	    checksum ((unsigned char *)record, recsize, &sum16, &sum32);
 	}			
 	/* Now add datasum and checksum and put the result in
 	 * 1's complement with permute in a string.
@@ -850,205 +880,24 @@ unsigned int *datasum;		/* datasum value */
 	pos = lseek (fd, 0, SEEK_END);
 }
 
-/* CHECKSUM -- Increment the checksum of a character array.  The
- * calling routine must zero the checksum initially.  Shorts are
- * assumed to be 16 bits, ints 32 bits.
- */
-
-/* Explicitly exclude those ASCII characters that fall between the
- * upper and lower case alphanumerics (<=>?@[\]^_`) from the encoding.
- * Which is to say that only the digits 0-9, letters A-Z, and letters
- * a-r should appear in the ASCII coding for the unsigned integers.
- */
-#define	NX	13
-unsigned exclude[NX] = { 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
-			 0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60 };
-
-int offset = 0x30;		/* ASCII 0 (zero) character */
-
-/* Internet checksum algorithm, 16/32 bit unsigned integer version:
- */
-checksum (buf, length, sum16, sum32)
-char		*buf;
-int		length;
-unsigned short	*sum16;
-unsigned int	*sum32;
-{
-	unsigned short	*sbuf;
-	int	 	len, remain, i;
-	unsigned int	hi, lo, hicarry, locarry, tmp16;
-
-	sbuf = (unsigned short *) buf;
-
-	len = 2*(length / 4);	/* make sure len is even */
-	remain = length % 4;	/* add remaining bytes below */
-
-	/* Extract the hi and lo words - the 1's complement checksum
-	 * is associative and commutative, so it can be accumulated in
-	 * any order subject to integer and short integer alignment.
-	 * By separating the odd and even short words explicitly, both
-	 * the 32 bit and 16 bit checksums are calculated (although the
-	 * latter follows directly from the former in any case) and more
-	 * importantly, the carry bits can be accumulated efficiently
-	 * (subject to short integer overflow - the buffer length should
-	 * be restricted to less than 2**17 = 131072).
-	 */
-	hi = (*sum32 >> 16);
-	lo = (*sum32 << 16) >> 16;
-
-	for (i=0; i < len; i+=2) {
-	    hi += sbuf[i];
-	    lo += sbuf[i+1];
-	}
-
-	/* any remaining bytes are zero filled on the right
-	 */
-	if (remain) {
-	    if (remain >= 1)
-		hi += buf[2*len] * 0x100;
-	    if (remain >= 2)
-		hi += buf[2*len+1];
-	    if (remain == 3)
-		lo += buf[2*len+2] * 0x100;
-	}
-
-	/* fold the carried bits back into the hi and lo words
-	 */
-	hicarry = hi >> 16;
-	locarry = lo >> 16;
-
-	while (hicarry || locarry) {
-	    hi = (hi & 0xFFFF) + locarry;
-	    lo = (lo & 0xFFFF) + hicarry;
-	    hicarry = hi >> 16;
-	    locarry = lo >> 16;
-	}
-
-	/* simply add the odd and even checksums (with carry) to get the
-	 * 16 bit checksum, mask the two to reconstruct the 32 bit sum
-	 */
-	tmp16 = hi + lo;
-	while (tmp16 >> 16)
-	    tmp16 = (tmp16 & 0xFFFF) + (tmp16 >> 16);
-
-	*sum16 = tmp16;
-	*sum32 = (hi << 16) + lo;
-}
-
-
-/* CHAR_ENCODE -- Encode an unsigned integer into a printable ASCII
- * string.  The input bytes are each represented by four output bytes
- * whose sum is equal to the input integer, offset by 0x30 per byte.
- * The output is restricted to alphanumerics.
- *
- * This is intended to be used to embed the complement of a file checksum
- * within an (originally 0'ed) ASCII field in the file.  The resulting
- * file checksum will then be the 1's complement -0 value (all 1's).
- * This is an additive identity value among other nifty properties.  The
- * embedded ASCII field must be 16 or 32 bit aligned, or the characters
- * can be permuted to compensate.
- *
- * To invert the encoding, simply subtract the offset from each byte
- * and pass the resulting string to checksum.
- */
-
-char_encode (value, ascii, nbytes, permute)
-unsigned int	value;
-char		*ascii;	/* at least 17 characters long */
-int		nbytes;
-int		permute;
-{
-	int	byte, quotient, remainder, ch[4], check, i, j, k;
-	char	asc[32];
-
-	for (i=0; i < nbytes; i++) {
-	    byte = (value << 8*(i+4-nbytes)) >> 24;
-
-	    /* Divide each byte into 4 that are constrained to be printable
-	     * ASCII characters.  The four bytes will have the same initial
-	     * value (except for the remainder from the division), but will be
-	     * shifted higher and lower by pairs to avoid special characters.
-	     */
-	    quotient = byte / 4 + offset;
-	    remainder = byte % 4;
-
-	    for (j=0; j < 4; j++)
-		ch[j] = quotient;
-
-	    /* could divide this between the bytes, but the 3 character
-	     * slack happens to fit within the ascii alphanumeric range
-	     */
-	    ch[0] += remainder;
-
-	    /* Any run of adjoining ASCII characters to exclude must be
-	     * shorter (including the remainder) than the runs of regular
-	     * characters on either side.
-	     */
-	    check = 1;
-	    while (check)
-		for (check=0, k=0; k < NX; k++)
-		    for (j=0; j < 4; j+=2)
-			if (ch[j]==exclude[k] || ch[j+1]==exclude[k]) {
-			    ch[j]++;
-			    ch[j+1]--;
-			    check++;
-			}
-
-	    /* ascii[j*nbytes+(i+permute)%nbytes] = ch[j]; */
-	    for (j=0; j < 4; j++)
-		asc[j*nbytes+i] = ch[j];
-	}
-
-	for (i=0; i < 4*nbytes; i++)
-	    ascii[i] = asc[(i+4*nbytes-permute)%(4*nbytes)];
-
-	ascii[4*nbytes] = 0;
-}
-
-/* ADD_1S_COMP -- add two unsigned integer values using 1's complement
- * addition (wrap the overflow back into the low order bits).  Could do
- * the same thing using checksum(), but this is a little more obvious.
- * To subtract, just complement (~) one of the arguments.
- */
-unsigned int add_1s_comp (u1, u2)
-unsigned int	u1, u2;
-{
-	unsigned int	hi, lo, hicarry, locarry;
-
-	hi = (u1 >> 16) + (u2 >> 16);
-	lo = ((u1 << 16) >> 16) + ((u2 << 16) >> 16);
-
-	hicarry = hi >> 16;
-	locarry = lo >> 16;
-
-	while (hicarry || locarry) {
-	    hi = (hi & 0xFFFF) + locarry;
-	    lo = (lo & 0xFFFF) + hicarry;
-	    hicarry = hi >> 16;
-	    locarry = lo >> 16;
-	}
-
-	return ((hi << 16) + lo);
-}
-
 
 /* PRINTHEADER -- Print one line of information per file.
  *
  */
-printheader (fp, fh, type)
-FILE	*fp;			/* output file			*/
-register struct fheader *fh;	/* file header struct		*/
-char	*type;			/* type of file */
+static void
+printheader (
+    FILE *fp,			        /* output file			*/
+    register struct fheader *fh,	/* file header struct		*/
+    char *type			        /* type of file */
+)
 {
-	register struct	_modebits *mp;
-	char	c, *tp, line[CARDLEN];
-	int	k;
-	long clk;
+	char	*tp;
+	long    clk;
 
 	clk = fh->mtime;
 	tp = ctime (&fh->mtime);
 
-	fprintf (fp, "%-4d %-10.10s %9d %-12.12s %-4.4s %s",
+	fprintf (fp, "%-4d %-10.10s %9ld %-12.12s %-4.4s %s",
 	    ++count,type, fh->size, tp + 4, tp + 20, fh->name);
 	if (fh->linkflag && *fh->linkname) {
 	    fprintf (fp, " -> %s ", fh->linkname);
@@ -1060,14 +909,16 @@ char	*type;			/* type of file */
 /* COPYFILE -- Copy bytes from the input file to the output file.  Each file
  * consists of a integral number of FBLOCK size blocks on the output file.
  */
-copyfile (in, fh, out, ftype, out_off, nbp, datasum)
-int	in;			/* input file descriptor	*/
-struct	fheader *fh;		/* file header structure	*/
-int	out;			/* output file descriptor	*/
-int	ftype;			/* file type LF_TXT and others   */
-int	out_off;		/* points to the beginning of EHU */
-int	nbp;			/* number of Fblocks in data unit */
-unsigned int *datasum;		/* output datasum value		*/
+static void
+copyfile (
+    int	in,			/* input file descriptor	*/
+    struct fheader *fh,		/* file header structure	*/
+    int	out,			/* output file descriptor	*/
+    int	ftype,			/* file type LF_TXT and others   */
+    int	out_off,		/* points to the beginning of EHU */
+    int	nbp,			/* number of Fblocks in data unit */
+    unsigned int *datasum	/* output datasum value		*/
+)
 {
 	register int	i;
 	int	nbytes, ncards, pos;
@@ -1091,14 +942,14 @@ unsigned int *datasum;		/* output datasum value		*/
 	        nbytes = read (in, buf, FBLOCK*10);
 	        write (out, buf, nbytes);
 		if (sums == YES)
-		    checksum (buf, nbytes, &sum16, &sum32);
+		    checksum ((unsigned char *)buf, nbytes, &sum16, &sum32);
 		nb = nb + nbytes;
 	    }
 	    if (nbp % 10 != 0) {
 		nbytes = read (in, buf, (nbp % 10)*FBLOCK);
 		write (out, buf, nbytes);
 		if (sums == YES)
-		    checksum (buf, nbytes, &sum16, &sum32);
+		    checksum ((unsigned char *)buf, nbytes, &sum16, &sum32);
 		nb = nb + nbytes;
 	    }			
 	}
@@ -1108,7 +959,7 @@ unsigned int *datasum;		/* output datasum value		*/
 	    write (out, buf, nbytes);
 	    if (ftype != FITS_MEF) {
 		if (sums == YES)
-		    checksum (buf, nbytes, &sum16, &sum32);
+		    checksum ((unsigned char *)buf, nbytes, &sum16, &sum32);
 		nb = nb + nbytes;
 	    }
 	}
@@ -1123,7 +974,7 @@ unsigned int *datasum;		/* output datasum value		*/
 	if ((npad % 2880) > 0) {
 	    memset (buf, i, npad);
 	    if (sums == YES)
-		checksum (buf, npad, &sum16, &sum32);
+		checksum ((unsigned char *)buf, npad, &sum16, &sum32);
 	    write (out, buf, npad);
 	}
 
@@ -1139,15 +990,14 @@ unsigned int *datasum;		/* output datasum value		*/
 		in_off = lseek(out, ipos, SEEK_SET);
 		for (i=1; i<=bks; i++) {
 		    nbytes = read (out, buf, FBLOCK*10);
-		    checksum (buf, nbytes, &sum16, &sum32);
+		    checksum ((unsigned char *)buf, nbytes, &sum16, &sum32);
 		}
 		nbp = (epos-ipos) % (FBLOCK*10);
 		if (nbp != 0) {
 		    nbytes = read (out, buf, nbp);
-		    checksum (buf, nbytes, &sum16, &sum32);
+		    checksum ((unsigned char *)buf, nbytes, &sum16, &sum32);
 		}			
 	    }
-
 
 	    *datasum = sum32;
 	    /* go to the start of EHU */
@@ -1162,7 +1012,7 @@ unsigned int *datasum;		/* output datasum value		*/
 
 	    if (sums == YES) {
 		/* update DATASUM value */
-		sprintf(ascii,"%-10lu",sum32);
+		sprintf(ascii,"%-10lu",(unsigned long)sum32);
 		kwdb_SetValue (kwdb, "DATASUM", ascii);
 	    }
 	    /* Position the output file at the beginning of the EHDU to 
@@ -1179,9 +1029,8 @@ unsigned int *datasum;		/* output datasum value		*/
  * an // sequences into a single /, and make sure the directory pathname ends
  * in a single /.
  */
-char *
-dname (dir)
-char	*dir;
+static char *
+dname (char *dir)
 {
 	register char	*ip, *op;
 	static	char path[SZ_PATHNAME+1];
@@ -1192,7 +1041,7 @@ char	*dir;
 
 	if (op > path && *(op-1) != '/')
 	    *op++ = '/';
-	*op = (char )NULL;
+	*op = '\0';
 
 	return (path);
 }
@@ -1245,8 +1094,10 @@ char *fitsextn[] = {		/* Known FITS file extensions */
  * known binary file extension we assume it is a binary file; otherwise we call
  * os_access to determine the file type.
  */
-filetype (fname)
-char	*fname;			/* name of file to be examined	*/
+static int
+filetype (
+    char *fname			        /* name of file to be examined	*/
+)
 {
 	register char	*ip, *ep;
 	register int	n, ch, i;
@@ -1332,13 +1183,14 @@ char	*fname;			/* name of file to be examined	*/
 /* FITS_MEF -- Determines by reading the FITS file if is FITS (single unit)
 * or a FITS-MEF (multiple units).
 */
-fits_mef(fname, filesize)
-char 	*fname;
-int	filesize;	/* fname size */
+static int
+fits_mef(
+    char  *fname,
+    int	filesize	                /* fname size */
+)
 {
 	int     ncards;
 	int	fd, datasize, size;
-	char	*sval;
 	pointer kwdb;
 
 	if ((fd = open (fname, 0)) <= 0) {;
@@ -1371,8 +1223,7 @@ int	filesize;	/* fname size */
 
 
 static char *
-str (n)
-int	n;
+str (int n)
 {
         static char s[32];
 	sprintf (s, "%d", n);
@@ -1383,13 +1234,13 @@ int	n;
 /* GNAME -- Return a filename with no pre or post '/' if it
  * has any.
  */
-char *gname(name)
-char *name;
+static char *
+gname (char *name)
 {
 	char *ip;
 	
 	ip = rindex(name,'/');
-	if (ip != NULL && *(ip+1) == (char )NULL)
+	if (ip != NULL && *(ip+1) == (char)'\0')
 	    *ip = (char )'\0';
 
 	ip = rindex(name,'/');
@@ -1422,14 +1273,16 @@ char *name;
  * FLEVEL:  Directory level of the unit. 1 is top directory
  * FNAME:   File name for the extension unit
  */
-toc_card (in, fh, ftype, hd_cards, level, usize)
-register struct fheader *fh;	/* file header struct		*/
-int	ftype;			/* type of file */
-int	hd_cards;
-int	level;			/* Directory level */
-int	usize;			/* FITS unit size		*/
+static void
+toc_card (
+    struct fheader *fh,	                /* file header struct		*/
+    int	ftype,			        /* type of file */
+    int	hd_cards,
+    int	level,			        /* Directory level */
+    int	usize			        /* FITS unit size		*/
+)
 {
-	char	type[3], *tp, line[CARDLEN];
+	char	type[3];
 	int	c, k, fsize;
 
 	switch(ftype) {
@@ -1464,7 +1317,7 @@ int	usize;			/* FITS unit size		*/
 
 	if (count >= maxcount) {
 	    maxcount += MAX_TOC;
-	    slines= (char *)realloc (maxcount, TOCLEN);
+	    slines = (char *) calloc ((ssize_t)maxcount, TOCLEN);
 	}
 
 	if (ftype == FITS_MEF || ftype == FITS) {
@@ -1487,8 +1340,10 @@ int	usize;			/* FITS unit size		*/
 /* LIST_TOC -- List and update if necessary the header offset 
  * column because we have gone over one or more FITS blocks with lines of TOC.
  */
-list_toc (kwdb)
-pointer kwdb;        /* Output db */
+static void
+list_toc (
+    pointer kwdb                        /* Output db */
+)
 {
 
 	char    *s, line[CARDLEN];
@@ -1532,12 +1387,13 @@ pointer kwdb;        /* Output db */
 /* LIST_MEF -- Lists the extension units of a mef file when TOC is
  * requested.
  */
-list_mef(fd, usize)
-int	fd;		/* input fd   */
-int	usize;		/* size of MEF PHDU */
+static int
+list_mef(
+    int	fd,		/* input fd   */
+    int	usize		/* size of MEF PHDU */
+)
 {
-	int     ncards, bytepix, pcount, naxes, i, npix;
-	int	stat, foff, datasize;
+	int	ncards, stat, foff, datasize;
 	char	ft, *sval;
 	pointer kwdb;
 
@@ -1579,12 +1435,12 @@ int	usize;		/* size of MEF PHDU */
 	    datasize =  pix_block (kwdb);
 	    ncards = ((ncards + 35)/36)*36;
 
-	    sprintf(slines,"  %-4d %4d %7.7c",++count, 
+	    sprintf(slines,"  %-4d %4d %c      ",++count, 
 		(hdr_off+foff)/2880, ft);
 	    foff = foff + datasize * FBLOCK + ncards * CARDLEN;
 	    if (count >= maxcount) {
 		maxcount += MAX_TOC;
-		slines= (char *)realloc (maxcount, TOCLEN);
+		slines = (char *)calloc ((ssize_t)maxcount, TOCLEN);
 	    }
 	    slines = slines + TOCLEN;
 
@@ -1600,9 +1456,8 @@ int	usize;		/* size of MEF PHDU */
 /* PIX_BLOCK -- Calculate the size of the pixel area for a FITS UNIT
  *  in blocks of 2880.
  */
-pix_block (kwdb)
-pointer	kwdb;
-
+static int
+pix_block (pointer kwdb)
 {
 	char *sval, *spcount, kwname[8];
 	int  bytepix, naxes, npix, i, pcount; 
