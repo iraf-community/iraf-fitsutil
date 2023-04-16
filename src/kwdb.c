@@ -1,10 +1,6 @@
 /* Copyright(c) 1986 Association of Universities for Research in Astronomy Inc.
  */
 
-#include <stdio.h>
-#include <fcntl.h>
-#include "kwdb.h"
-
 /*
  * KWDB -- Keyword Database interface.
  *
@@ -110,6 +106,14 @@
  *	    strings referenced by index
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <ctype.h>
+#include "kwdb.h"
+
 #define NTHREADS	797
 #define DEF_SZSBUF	32768
 #define	DEF_NKEYWORDS	512
@@ -149,28 +153,64 @@ struct kwdb {
 	Item *itab;		/* pointer to itab array */
 	char *sbuf;		/* pointer to string buffer */
 	int hashtbl[NTHREADS];	/* hash table */
-	int (*read)();		/* private file read function */
-	int (*write)();		/* private file write function */
+
+	ssize_t (*read)();	/* private file read function */
+	ssize_t (*write)();	/* private file write function */
 };
 typedef struct kwdb KWDB;
-
-extern char *mkstemp();
-extern int read(), write();
 
 static int hash();
 static int addstr();
 static int streq();
+
 
 /*
  * Public functions.
  * -----------------
  */
 
+pointer kwdb_Open (char *kwdbname);
+void    kwdb_Close (pointer kwdb);
+char   *kwdb_Name (pointer kwdb);
+int     kwdb_Len (pointer kwdb);
+int     kwdb_AddEntry (pointer kwdb, char *keyword, char *value, 
+                       char *type, char *comment);
+int     kwdb_Lookup (pointer kwdb, char *keyword, int instance);
+char   *kwdb_GetValue (pointer kwdb, char *keyword);
+int     kwdb_SetValue (pointer kwdb, char *keyword, char *value);
+int     kwdb_SetComment (pointer kwdb, char *keyword, char *comment);
+char   *kwdb_GetComment (pointer kwdb, char *keyword);
+int     kwdb_SetType (pointer kwdb, char *keyword, char *type);
+char   *kwdb_GetType (pointer kwdb, char *keyword);
+int     kwdb_Head (pointer kwdb);
+int     kwdb_Tail (pointer kwdb);
+int     kwdb_Next (pointer kwdb, int ep);
+int     kwdb_DeleteEntry (pointer kwdb, int ep);
+int     kwdb_RenameEntry (pointer kwdb, int ep, char *newname);
+int     kwdb_CopyEntry (pointer kwdb, pointer o_kwdb, int o_ep, char *newname);
+int     kwdb_GetEntry (pointer kwdb, int ep, char **keyword, char **value,
+                       char **type, char **comment);
+char   *kwdb_KWName (pointer kwdb, int ep);
+
+pointer kwdb_OpenFITS (char *filename, int maxcards, int *nblank);
+int     kwdb_ReadFITS (pointer kwdb, int fd, int maxcards, int *nblank);
+int     kwdb_UpdateFITS (register KWDB *kwdb, char *filename,
+                         int update, int extend, int npad);
+int     kwdb_WriteFITS (KWDB *kwdb, int fd);
+void    kwdb_SetIO (register KWDB *kwdb,
+                    ssize_t (*readfcn)(), ssize_t (*writefcn)());
+
+static int addstr (register KWDB *db, char *text);
+static int streq (register char *s1, register char *s2);
+static int hash (char *key);
+
+
 /* KWDB_OPEN -- Open a new, empty keyword database.
  */
 pointer
-kwdb_Open (kwdbname)
-char *kwdbname;
+kwdb_Open (
+    char *kwdbname
+)
 {
 	register KWDB *db = NULL;
 	Item *itab = NULL;
@@ -216,8 +256,9 @@ cleanup:
 /* KWDB_CLOSE -- Destroy a KWDB database and free all resources.
  */
 void
-kwdb_Close (kwdb)
-pointer kwdb;
+kwdb_Close (
+    pointer kwdb
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 
@@ -233,8 +274,9 @@ pointer kwdb;
 /* KWDB_NAME -- Return the name of a KWDB database.
  */
 char *
-kwdb_Name (kwdb)
-pointer kwdb;
+kwdb_Name (
+    pointer kwdb
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	return (db->sbuf + db->kwdbname);
@@ -243,8 +285,10 @@ pointer kwdb;
 
 /* KWDB_LEN -- Return the number of items in a KWDB database.
  */
-kwdb_Len (kwdb)
-pointer kwdb;
+int
+kwdb_Len (
+    pointer kwdb
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	return (db->nitems);
@@ -255,9 +299,14 @@ pointer kwdb;
  * fields keyword, value, type, or comment can be NULL if these fields
  * have no value.
  */
-kwdb_AddEntry (kwdb, keyword, value, type, comment)
-pointer kwdb;
-char *keyword, *value, *type, *comment;
+int
+kwdb_AddEntry (
+    pointer kwdb,
+    char *keyword, 
+    char *value, 
+    char *type, 
+    char *comment
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp, *otp;
@@ -299,7 +348,7 @@ char *keyword, *value, *type, *comment;
 	/* Enter item in hash table. */
 	if (keyword && *keyword) {
 	    int hashval = hash (keyword);
-	    if (i = db->hashtbl[hashval])
+	    if ((i = db->hashtbl[hashval]))
 		itp->nexthash = i;
 	    db->hashtbl[hashval] = index;
 	}
@@ -317,10 +366,12 @@ char *keyword, *value, *type, *comment;
  * of the list using kwdb_Head/kwdb_Next, which accesses the list with 
  * oldest entries first.
  */
-kwdb_Lookup (kwdb, keyword, instance)
-pointer kwdb;
-char *keyword;
-int instance;
+int
+kwdb_Lookup (
+    pointer kwdb,
+    char *keyword,
+    int instance
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp;
@@ -328,7 +379,7 @@ int instance;
 	int hashval;
 
 	hashval = hash (keyword);
-	if (i = db->hashtbl[hashval])
+	if ((i = db->hashtbl[hashval]))
 	    for (itp = REF_EP(db,i), j=0;  i;  itp = REF_EP(db,i=itp->nexthash))
 		if (streq (db->sbuf + itp->name, keyword))
 		    if (instance == j++)
@@ -342,15 +393,16 @@ int instance;
  * if the keyword is not found.
  */
 char *
-kwdb_GetValue (kwdb, keyword)
-pointer kwdb;
-char *keyword;
+kwdb_GetValue (
+    pointer kwdb,
+    char *keyword
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp;
 	register int ep;
 
-	if (ep = kwdb_Lookup (kwdb, keyword, 0)) {
+	if ((ep = kwdb_Lookup (kwdb, keyword, 0))) {
 	    itp = REF_EP(db,ep);
 	    return (db->sbuf + itp->value);
 	}
@@ -362,16 +414,19 @@ char *keyword;
 /* KWDB_SETVALUE -- Modify the value of a keyword.  Zero is returned for a
  * successul operation, otherwise -1.
  */
-kwdb_SetValue (kwdb, keyword, value)
-pointer kwdb;
-char *keyword, *value;
+int
+kwdb_SetValue (
+    pointer kwdb,
+    char *keyword,
+    char *value
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp = NULL;
 	char *oldval;
 	int ep;
 
-	if (ep = kwdb_Lookup (kwdb, keyword, 0))
+	if ((ep = kwdb_Lookup (kwdb, keyword, 0)))
 	    itp = REF_EP(db,ep);
 	else
 	    return (-1);
@@ -391,16 +446,19 @@ char *keyword, *value;
 /* KWDB_SETCOMMENT -- Modify the comment field of a keyword.  Zero is
  * returned for a successul operation, otherwise -1.
  */
-kwdb_SetComment (kwdb, keyword, comment)
-pointer kwdb;
-char *keyword, *comment;
+int
+kwdb_SetComment (
+    pointer kwdb,
+    char *keyword,
+    char *comment
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp = NULL;
 	char *oldcom;
 	int ep;
 
-	if (ep = kwdb_Lookup (kwdb, keyword, 0))
+	if ((ep = kwdb_Lookup (kwdb, keyword, 0)))
 	    itp = REF_EP(db,ep);
 	else
 	    return (-1);
@@ -421,15 +479,16 @@ char *keyword, *comment;
  * is returned if the keyword is not found.
  */
 char *
-kwdb_GetComment (kwdb, keyword)
-pointer kwdb;
-char *keyword;
+kwdb_GetComment (
+    pointer kwdb,
+    char *keyword
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp;
 	register int ep;
 
-	if (ep = kwdb_Lookup (kwdb, keyword, 0)) {
+	if ((ep = kwdb_Lookup (kwdb, keyword, 0))) {
 	    itp = REF_EP(db,ep);
 	    return (db->sbuf + itp->comment);
 	}
@@ -441,16 +500,19 @@ char *keyword;
 /* KWDB_SETTYPE -- Modify the data type field of a keyword.  Zero is
  * returned for a successul operation, otherwise -1.
  */
-kwdb_SetType (kwdb, keyword, type)
-pointer kwdb;
-char *keyword, *type;
+int
+kwdb_SetType (
+    pointer kwdb,
+    char *keyword,
+    char *type
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp = NULL;
 	char *oldtype;
 	int ep;
 
-	if (ep = kwdb_Lookup (kwdb, keyword, 0))
+	if ((ep = kwdb_Lookup (kwdb, keyword, 0)))
 	    itp = REF_EP(db,ep);
 	else
 	    return (-1);
@@ -471,15 +533,16 @@ char *keyword, *type;
  * is returned if the keyword is not found.
  */
 char *
-kwdb_GetType (kwdb, keyword)
-pointer kwdb;
-char *keyword;
+kwdb_GetType (
+    pointer kwdb,
+    char *keyword
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp;
 	register int ep;
 
-	if (ep = kwdb_Lookup (kwdb, keyword, 0)) {
+	if ((ep = kwdb_Lookup (kwdb, keyword, 0))) {
 	    itp = REF_EP(db,ep);
 	    return (db->sbuf + itp->type);
 	}
@@ -490,8 +553,10 @@ char *keyword;
 
 /* KWDB_HEAD -- Return the entry pointer for the first entry in the database.
  */
-kwdb_Head (kwdb)
-pointer kwdb;
+int
+kwdb_Head (
+    pointer kwdb
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	return (db->head);
@@ -501,8 +566,10 @@ pointer kwdb;
 /* KWDB_TAIL -- Return the entry pointer for the most recent entry in
  * the database.
  */
-kwdb_Tail (kwdb)
-pointer kwdb;
+int
+kwdb_Tail (
+    pointer kwdb
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	return (db->tail);
@@ -513,9 +580,11 @@ pointer kwdb;
  * given a pointer to the preceding entry.  Zero is returned at the end of
  * the database.
  */
-kwdb_Next (kwdb, ep)
-pointer kwdb;
-int ep;
+int
+kwdb_Next (
+    pointer kwdb,
+    int ep
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp = NULL;
@@ -528,9 +597,11 @@ int ep;
 /* KWDB_DELETEENTRY -- Delete an entry from the database given its entry
  * pointer.
  */
-kwdb_DeleteEntry (kwdb, ep)
-pointer kwdb;
-int ep;
+int
+kwdb_DeleteEntry (
+    pointer kwdb,
+    int ep
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp = NULL, *otp;
@@ -586,10 +657,12 @@ int ep;
  * its position in the list but if there are redefinitions it becomes the 
  * most recent instance.
  */
-kwdb_RenameEntry (kwdb, ep, newname)
-pointer kwdb;
-int ep;
-char *newname;
+int
+kwdb_RenameEntry (
+    pointer kwdb,
+    int ep,
+    char *newname
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp = NULL, *otp;
@@ -621,7 +694,7 @@ char *newname;
 	/* Reenter the item in the hash table using the new name. */
 	if (newname && *newname) {
 	    int hashval = hash (newname);
-	    if (i = db->hashtbl[hashval])
+	    if ((i = db->hashtbl[hashval]))
 		itp->nexthash = i;
 	    db->hashtbl[hashval] = ep;
 	    itp->name = addstr (db, newname);
@@ -636,13 +709,14 @@ char *newname;
  * is not not null it will be the name of the new entry.  The input and output
  * datbases can be the same.
  */
-kwdb_CopyEntry (kwdb, o_kwdb, o_ep, newname)
-pointer kwdb;
-pointer o_kwdb;
-int o_ep;
-char *newname;
+int
+kwdb_CopyEntry (
+    pointer kwdb,
+    pointer o_kwdb,
+    int o_ep,
+    char *newname
+)
 {
-	register KWDB *db = (KWDB *) kwdb;
 	register KWDB *o_db = (KWDB *) o_kwdb;
 	register Item *itp = REF_EP(o_db,o_ep);
 	char *name;
@@ -663,10 +737,15 @@ char *newname;
  * number of nonempty strings is returned (i.e. zero is returned if the value
  * is a blank line, 3 for a full keyword with value and comment).
  */
-kwdb_GetEntry (kwdb, ep, keyword, value, type, comment)
-pointer kwdb;
-int ep;
-char **keyword, **value, **type, **comment;
+int
+kwdb_GetEntry (
+    pointer kwdb,
+    int ep,
+    char **keyword,
+    char **value,
+    char **type,
+    char **comment
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp;
@@ -685,7 +764,7 @@ char **keyword, **value, **type, **comment;
 	if (comment)
 	    *comment = itp->comment + db->sbuf;
 
-	return (itp->name + itp->value + itp->type, itp->comment);
+	return (itp->name + itp->value + itp->type + itp->comment);
 }
 
 
@@ -693,9 +772,10 @@ char **keyword, **value, **type, **comment;
  * pointer.
  */
 char *
-kwdb_KWName (kwdb, ep)
-pointer kwdb;
-int ep;
+kwdb_KWName (
+    pointer kwdb,
+    int ep
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register Item *itp;
@@ -725,10 +805,11 @@ int ep;
  * desired.  The KWDB pointer is returned as the function value.
  */
 pointer
-kwdb_OpenFITS (filename, maxcards, nblank)
-char *filename;		/* file to be opened */
-int maxcards;		/* maximum FITS cards to be read */
-int *nblank;		/* if not NULL receives count of blank lines at end */
+kwdb_OpenFITS (
+    char *filename,	/* file to be opened */
+    int maxcards,	/* maximum FITS cards to be read */
+    int *nblank		/* if not NULL receives count of blank lines at end */
+)
 {
 	register KWDB *kwdb;
 	int fd;
@@ -764,11 +845,13 @@ int *nblank;		/* if not NULL receives count of blank lines at end */
  * desired.  A count of the number of cards read is returned as the function
  * value, or -1 if an error occurs.
  */
-kwdb_ReadFITS (kwdb, fd, maxcards, nblank)
-pointer kwdb;
-int fd;
-int maxcards;
-int *nblank;
+int
+kwdb_ReadFITS (
+    pointer kwdb,
+    int fd,
+    int maxcards,
+    int *nblank
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	register char *ip, *op;
@@ -870,11 +953,12 @@ int *nblank;
 	/* Trim any blank lines at the end of the header list. */
 	for (ep=kwdb_Tail(kwdb), nb=0;  ep > 0;  ep=kwdb_Tail(kwdb), nb++) {
 	    char *keyword, *value, *type;
-	    if (kwdb_GetEntry (kwdb, ep, &keyword, &value, &type, NULL) >= 0)
-		if (*type == 'T' && *value == '\0')
+	    if (kwdb_GetEntry (kwdb, ep, &keyword, &value, &type, NULL) >= 0) {
+		if (*type == 'T' && *value == '\0') {
 		    kwdb_DeleteEntry (kwdb, ep);
-		else
+		} else
 		    break;
+            }
 	}
 	if (nblank)
 	    *nblank = nb;
@@ -891,10 +975,14 @@ int *nblank;
  * automatically be extended if the KWDB will not fit in the existing header
  * area.
  */
-kwdb_UpdateFITS (kwdb, filename, update, extend, npad)
-register KWDB *kwdb;
-char *filename;
-int update, extend, npad;
+int
+kwdb_UpdateFITS (
+    register KWDB *kwdb,
+    char *filename,
+    int update,
+    int extend,
+    int npad
+)
 {
 	register char *ip, *op, *cp;
 	int nblocks, nbytes, lastone, maxcards, new, fd, i;
@@ -940,7 +1028,7 @@ int update, extend, npad;
 		for (ip=filename, op=lop=tmpfile;  *ip;  ip++)
 		    if ((*op++ = *ip) == '/')
 			lop = op;
-		for (ip="kwdb.XXXXXX", op=lop;  *op++ = *ip++;  )
+		for (ip="kwdb.XXXXXX", op=lop; (*op++ = *ip++);  )
 		    ;
 		*op = '\0';
 		if (!mkstemp(tmpfile)) {
@@ -1016,12 +1104,14 @@ abort:			close (fd);
  * No END card is written.  WriteFITS may be called to write all or part of
  * a FITS header.
  */
-kwdb_WriteFITS (kwdb, fd)
-KWDB *kwdb;
-int fd;
+int
+kwdb_WriteFITS (
+    KWDB *kwdb,
+    int fd
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
-	register char *ip, *op, *cp;
+	register char *ip, *op;
 	int ncards=0, ep, n, ch;
 	char card[256];
 
@@ -1099,10 +1189,12 @@ int fd;
 /* KWDB_SETIO -- Set the read and write functions to be used by kwdb_ReadFITS
  * and kwdb_WriteFITS.
  */
-kwdb_SetIO (kwdb, readfcn, writefcn)
-register KWDB *kwdb;
-int (*readfcn)();
-int (*writefcn)();
+void
+kwdb_SetIO (
+    register KWDB *kwdb,
+    ssize_t (*readfcn)(),
+    ssize_t (*writefcn)()
+)
 {
 	register KWDB *db = (KWDB *) kwdb;
 	db->read = readfcn;
@@ -1115,15 +1207,15 @@ int (*writefcn)();
  * -------------------
  */
 
-
 /* ADDSTR -- Add a string to the database string buffer.  The sbuf index of
  * the string is returned.  If the string is NULL or empty zero is returned.
  * Element zero of sbuf is always the null/empty string.
  */
 static int
-addstr (db, text)
-register KWDB *db;
-char *text;
+addstr (
+    register KWDB *db,
+    char *text
+)
 {
 	int offset, sbuflen, nchars;
 	char *sbuf;
@@ -1152,8 +1244,7 @@ char *text;
 /* HASH -- Compute the (case insensitive) hash value of a string.
  */
 static int
-hash (key)
-char *key;
+hash (char *key)
 {
 	register char *ip;
 	register int sum, i, ch;
@@ -1168,8 +1259,10 @@ char *key;
 /* STREQ -- Case insensitive string compare.
  */
 static int
-streq (s1, s2)
-register char *s1, *s2;
+streq (
+    register char *s1,
+    register char *s2
+)
 {
 	register int c1, c2;
 
