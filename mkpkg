@@ -35,7 +35,14 @@ src:
 	$call update@src
 	;
 
-# STRIP -- Strip the TABLES directories of all sources and other files not
+clean:
+	$verbose off
+	$set DIRS = "lib src"
+	!($(hlib)/mkfloat.csh generic -d $(DIRS) ; rm -rf bin.[gbl]* *spool*)
+	;
+
+
+# STRIP -- Strip the FITSUTIL directories of all sources and other files not
 # required to run the system, or for user programming.
 
 strip:
@@ -56,7 +63,6 @@ summary:
 	;
 
 
-
 # IRAF multiple architecture support.
 # ----------------------------------------
 
@@ -73,15 +79,6 @@ generic:				# generic installation (no bin)
 	$set DIRS = "lib src"
 	!$(hlib)/mkfloat generic -d $(DIRS)
 	;
-
-freebsd:                                # install FreeBSD binaries
-	$ifnfile (bin.freebsd)
-	    !mkdir bin.freebsd
-	$endif
-        $verbose off
-        $set DIRS = "lib src"
-        !$(hlib)/mkfloat freebsd -d $(DIRS)
-        ;
 linux:                                  # install Slackwkare Linux binaries
 	$ifnfile (bin.linux)
 	    !mkdir bin.linux
@@ -98,7 +95,7 @@ linux64:                                # install x86_64 binaries
         $set DIRS = "lib src"
         !$(hlib)/mkfloat linux64 -d $(DIRS)
         ;
-macosx:                                 # install Mac OS X (PPC) binaries
+macosx:                                 # install Mac OS X (Apple) binaries
 	$ifnfile (bin.macosx)
 	    !mkdir bin.macosx
 	$endif
@@ -114,43 +111,11 @@ macintel:                               # install Mac OS X (Intel) binaries
         $set DIRS = "lib src"
         !$(hlib)/mkfloat macintel -d $(DIRS)
         ;
-cygwin:                                 # install Cygwin binaries
-	$ifnfile (bin.cygwin)
-	    !mkdir bin.cygwin
+macos64:                                # install Mac OS X alt binaries
+	$ifnfile (bin.macos64)
+	    !mkdir bin.macos64
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat cygwin -d $(DIRS)
-        ;
-redhat:                                 # install Redhat Linux binaries
-	$ifnfile (bin.redhat)
-	    !mkdir bin.redhat
-	$endif
-        $verbose off
-        $set DIRS = "lib src"
-        !$(hlib)/mkfloat redhat -d $(DIRS)
-        ;
-sparc:					# install sparc binaries
-	$ifnfile (bin.sparc)
-	    !mkdir bin.sparc
-	$endif
-	$verbose off
-	$set DIRS = "lib src"
-	!$(hlib)/mkfloat sparc -d $(DIRS)
-	;
-ssun:					# install Sun/Solaris binaries
-	$ifnfile (bin.ssun)
-	    !mkdir bin.ssun
-	$endif
-	$verbose off
-	$set DIRS = "lib src"
-	!$(hlib)/mkfloat ssun -d $(DIRS)
-	;
-sunos:                                  # install SunOS (Solaris x86) binaries
-	$ifnfile (bin.sunos)
-	    !mkdir bin.sunos
-	$endif
-        $verbose off
-        $set DIRS = "lib src"
-        !$(hlib)/mkfloat sunos -d $(DIRS)
+        !$(hlib)/mkfloat macos64 -d $(DIRS)
         ;
