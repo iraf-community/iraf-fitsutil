@@ -1,3 +1,6 @@
+/* Copyright(c) 1986 Association of Universities for Research in Astronomy Inc.
+ */
+
 /* Explicitly exclude those ASCII characters that fall between the
  * upper and lower case alphanumerics (<=>?@[\]^_`) from the encoding.
  * Which is to say that only the digits 0-9, letters A-Z, and letters
