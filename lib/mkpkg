@@ -25,5 +25,5 @@ libmef.a:
 # Builds libcfitsio.a if not already on the system, otherwise just
 # build fpack/funpack binaries using core CFITSIO lib.
 libcfitsio.a:		
-	cfitsio
+	@cfitsio
 	;
