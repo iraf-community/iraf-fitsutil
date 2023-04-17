@@ -10,10 +10,9 @@ update:
 libcfitsio.a:
 	# cheat and use Makefile....
 	!(CFLAGS='$(HSI_CF) $(HSI_LF)'; ./configure; make; make fpack funpack)
-        #!make
-	#!make fpack funpack
         $move libcfitsio.a fitsutilbin$libcfitsio.a
         $move fpack fitsutilbin$fpack
         $move funpack fitsutilbin$funpack
 	!make clean
+        !rm Makefile cfitsio.pc config.log config.status
 	;
