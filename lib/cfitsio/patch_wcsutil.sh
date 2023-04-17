@@ -1,7 +1,11 @@
 #!/bin/sh
+#
+# Patch the wcsutil.c code to allow TPV projections.  
+# 
+# Derived from: 
+#       https://github.com/iraf-community/iraf/vendor/trim_cfitsio.sh
 
 set -e
-
 patch -b -s -p1 <<EOF
 --- b./wcsutil.c
 +++ a./wcsutil.c
