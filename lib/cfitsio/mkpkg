@@ -1,0 +1,19 @@
+# CFITSIO -- Update the CFITSIO library.
+
+$call update
+$exit
+
+update:
+	$update   libcfitsio.a
+	;
+
+libcfitsio.a:
+	# cheat and use Makefile....
+	!(CFLAGS='$(HSI_CF) $(HSI_LF)'; ./configure; make; make fpack funpack)
+        #!make
+	#!make fpack funpack
+        $move libcfitsio.a fitsutilbin$libcfitsio.a
+        $move fpack fitsutilbin$fpack
+        $move funpack fitsutilbin$funpack
+	!make clean
+	;
