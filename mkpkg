@@ -35,7 +35,14 @@ src:
 	$call update@src
 	;
 
-# STRIP -- Strip the TABLES directories of all sources and other files not
+clean:
+	$verbose off
+	$set DIRS = "lib src"
+	!($(hlib)/mkfloat.csh generic -d $(DIRS) ; rm -rf bin.[gbl]* *spool*)
+	;
+
+
+# STRIP -- Strip the FITSUTIL directories of all sources and other files not
 # required to run the system, or for user programming.
 
 strip:
@@ -62,7 +69,7 @@ summary:
 arch:					# show current float option
 showfloat:
 	$verbose off
-	!$(hlib)/mkfloat.sh
+	!$(hlib)/mkfloat.csh
 	;
 generic:				# generic installation (no bin)
 	$ifnfile (bin.generic)
@@ -70,7 +77,7 @@ generic:				# generic installation (no bin)
 	$endif
 	$verbose off
 	$set DIRS = "lib src"
-	!$(hlib)/mkfloat.sh generic -d $(DIRS)
+	!$(hlib)/mkfloat.csh generic -d $(DIRS)
 	;
 linux:                                  # install Slackwkare Linux binaries
 	$ifnfile (bin.linux)
@@ -78,7 +85,7 @@ linux:                                  # install Slackwkare Linux binaries
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.sh linux -d $(DIRS)
+        !$(hlib)/mkfloat.csh linux -d $(DIRS)
         ;
 linux64:                                # install x86_64 binaries
 	$ifnfile (bin.linux64)
@@ -86,7 +93,7 @@ linux64:                                # install x86_64 binaries
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.sh linux64 -d $(DIRS)
+        !$(hlib)/mkfloat.csh linux64 -d $(DIRS)
         ;
 macosx:                                 # install Mac OS X (Apple) binaries
 	$ifnfile (bin.macosx)
@@ -94,7 +101,7 @@ macosx:                                 # install Mac OS X (Apple) binaries
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.sh macosx -d $(DIRS)
+        !$(hlib)/mkfloat.csh macosx -d $(DIRS)
         ;
 macintel:                               # install Mac OS X (Intel) binaries
 	$ifnfile (bin.macintel)
@@ -102,7 +109,7 @@ macintel:                               # install Mac OS X (Intel) binaries
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.sh macintel -d $(DIRS)
+        !$(hlib)/mkfloat.csh macintel -d $(DIRS)
         ;
 macos64:                                # install Mac OS X alt binaries
 	$ifnfile (bin.macos64)
@@ -110,5 +117,5 @@ macos64:                                # install Mac OS X alt binaries
 	$endif
         $verbose off
         $set DIRS = "lib src"
-        !$(hlib)/mkfloat.sh macos64 -d $(DIRS)
+        !$(hlib)/mkfloat.csh macos64 -d $(DIRS)
         ;
