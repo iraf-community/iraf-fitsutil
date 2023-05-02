@@ -18,7 +18,7 @@ relink:
 	$link x_fxutil.o libpkg.a -lxtools -o xx_fitsutil.e
 	$ifeq (MACH, linux, redhat, macosx, macintel) then
             !cc -m32 -c $(HSI_CF) fgwrite.c fgread.c sum32.c checksum.c kwdb.c
-	    !cc -m32 $(HSI_LF) fgwrite.o kwdb.o -o fgwrite.e
+	    !cc -m32 $(HSI_LF) fgwrite.o kwdb.o checksum.o -o fgwrite.e
 	    !cc -m32 $(HSI_LF) fgread.o kwdb.o checksum.o -o fgread.e
 	    !cc -m32 $(HSI_LF) sum32.o checksum.o -o sum32
 	$else

@@ -4,7 +4,9 @@ $call update
 $exit
 
 update:
+	$checkout libcfitsio.a ../
 	$update   libcfitsio.a
+	$checkin  libcfitsio.a ../
 	;
 
 libcfitsio.a:
