@@ -103,7 +103,9 @@ macos64:                                # install Mac OS X alt binaries
         $verbose off
         $set DIRS = "lib src"
         !$(hlib)/mkfloat.csh macosx -d $(DIRS)
-        !(ln -s bin.macosx bin.macos64) # compatability link
+	$ifnfile (bin.macos64)
+            !ln -s bin.macosx bin.macos64
+	$endif
         ;
 macintel:                               # install Mac OS X (Intel) binaries
 	$ifnfile (bin.macintel)
