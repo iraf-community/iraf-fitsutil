@@ -1,10 +1,5 @@
 #{ FITSUTIL.CL -- The FITSUTIL package
 
-print ("This is the initial release of the IRAF FITSUTIL package")
-print ("to include support for FITS tile compression via 'fpack'.")
-print ("Please send comments and questions to seaman@noao.edu.")
-print ("")
-
 cl < "fitsutil$/lib/zzsetenv.def"
 package	fitsutil, bin = fitsutilbin$
 
