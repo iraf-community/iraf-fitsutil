@@ -13,20 +13,11 @@ relink:
 	$update libpkg.a
 	$omake x_fxutil.x
 
-#	$link x_fxutil.o libpkg.a -lmef  -ldbc -lxtools -o xx_fitsutil.e
-#	$link x_fxutil.o libpkg.a -lmef -lxtools -o xx_fitsutil.e
 	$link x_fxutil.o libpkg.a -lxtools -o xx_fitsutil.e
-	$ifeq (MACH, linux, redhat, macosx, macintel) then
-            !cc -m32 -c $(HSI_CF) fgwrite.c fgread.c sum32.c checksum.c kwdb.c
-	    !cc -m32 $(HSI_LF) fgwrite.o kwdb.o checksum.o -o fgwrite.e
-	    !cc -m32 $(HSI_LF) fgread.o kwdb.o checksum.o -o fgread.e
-	    !cc -m32 $(HSI_LF) sum32.o checksum.o -o sum32
-	$else
-            !cc -c $(HSI_CF) fgwrite.c fgread.c sum32.c checksum.c kwdb.c
-	    !cc fgwrite.o kwdb.o checksum.o -o fgwrite.e
-	    !cc fgread.o kwdb.o checksum.o -o fgread.e
-	    !cc sum32.o checksum.o -o sum32
-	$endif
+        !cc -c $(HSI_CF) fgwrite.c fgread.c sum32.c checksum.c kwdb.c
+	!cc $(HSI_LF) fgwrite.o kwdb.o checksum.o -o fgwrite.e
+	!cc $(HSI_LF) fgread.o kwdb.o checksum.o -o fgread.e
+	!cc $(HSI_LF) sum32.o checksum.o -o sum32
 	!rm fgwrite.o fgread.o kwdb.o checksum.o sum32.o
 	;
 
