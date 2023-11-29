@@ -453,7 +453,7 @@ fgfileout (
 	char	card[CARDLEN], type[20];
 	char	sval[SLEN];
 	register struct	_modebits *mp;
-	char 	*tp, *fn, *get_owner(), *get_group();
+	char 	*tp, *fn;
 	pointer kwdb;
 	int	k, nbh, nbp, usize, in, hdr_plus;
 	long	in_off, out_off;
@@ -826,8 +826,7 @@ get_checksum (
 	unsigned int	sum32;
 	char	record[FBLOCK*NBLOCK];
 	char	ascii[161];
-	unsigned int add_1s_comp();
-	int	i, bks, ncards, pos, recsize, permute;
+	int	i, bks, ncards, recsize, permute;
 	pointer kwdb;
 
 	sum16 = 0;
@@ -838,7 +837,7 @@ get_checksum (
 	 * reading data. Read blocks of FBLOCK*NBLOCK bytes, then read a last 
 	 * partial block FBLOCK*nb bytes.
 	 */
-	pos = lseek (fd, out_offset, SEEK_SET);
+	(void) lseek (fd, out_offset, SEEK_SET);
 
 	bks = nbh/NBLOCK;
 	for (i=1; i<=bks; i++) {
@@ -857,7 +856,7 @@ get_checksum (
 	/* Position the output file at the beginning of the EHDU to 
 	 * read FITS header
 	 */
-	pos = lseek (fd, out_offset, SEEK_SET);
+	(void) lseek (fd, out_offset, SEEK_SET);
 
 	kwdb = kwdb_Open ("PHU");
 	if ((ncards = kwdb_ReadFITS (kwdb, fd, MAXENTRIES, NULL)) < 0) {
@@ -871,12 +870,12 @@ get_checksum (
 	/* Position the output file at the beginning of the EHDU to 
 	 * write back the update FITS header
 	 */
-	pos = lseek (fd, out_offset, SEEK_SET);
+	(void) lseek (fd, out_offset, SEEK_SET);
 	ncards = kwdb_WriteFITS (kwdb, out);
 	kwdb_Close(kwdb);
 
 	/* put file pointer to the EOF position */
-	pos = lseek (fd, 0, SEEK_END);
+	(void) lseek (fd, 0, SEEK_END);
 }
 
 
@@ -891,9 +890,9 @@ printheader (
 )
 {
 	char	*tp;
-	long    clk;
+	//long    clk;
 
-	clk = fh->mtime;
+	//clk = fh->mtime;
 	tp = ctime (&fh->mtime);
 
 	fprintf (fp, "%-4d %-10.10s %9ld %-12.12s %-4.4s %s",
@@ -920,10 +919,10 @@ copyfile (
 )
 {
 	register int	i;
-	int	nbytes, ncards, pos;
+	int	nbytes, ncards;
 	int	npad, nb, bks;
 	char	buf[FBLOCK*10], ascii[161];
-	int	ipos, epos, in_off; 
+	int	ipos, epos;
 	unsigned short	sum16;
 	unsigned int	sum32;
 	pointer  kwdb;
@@ -986,7 +985,7 @@ copyfile (
 		epos = lseek(out, 0, SEEK_CUR);
 		sum16=0; sum32=0;
 		bks = (epos-ipos)/(FBLOCK*10);
-		in_off = lseek(out, ipos, SEEK_SET);
+		(void) lseek(out, ipos, SEEK_SET);
 		for (i=1; i<=bks; i++) {
 		    nbytes = read (out, buf, FBLOCK*10);
 		    checksum ((unsigned char *)buf, nbytes, &sum16, &sum32);
@@ -1000,7 +999,7 @@ copyfile (
 
 	    *datasum = sum32;
 	    /* go to the start of EHU */
-	    pos = lseek (out, out_off, SEEK_SET);
+	    (void) lseek (out, out_off, SEEK_SET);
 
 	    kwdb = kwdb_Open ("PHU");
 	    if ((ncards = kwdb_ReadFITS (kwdb, out, MAXENTRIES, NULL)) < 0) {
@@ -1017,7 +1016,7 @@ copyfile (
 	    /* Position the output file at the beginning of the EHDU to 
 	     * write back the update FITS header
 	     */
-	    pos = lseek (out, out_off, SEEK_SET);
+	    (void) lseek (out, out_off, SEEK_SET);
 	    ncards = kwdb_WriteFITS (kwdb, out);
 	    kwdb_Close(kwdb);
 	}
@@ -1102,8 +1101,8 @@ filetype (
 	register int	n, ch, i;
 	int	 fd, nchars, newline_seen;
 	char	*extn, buf[SZ_TESTBLOCK];
-	int	fits_mef();
 	struct stat fi;
+
 
 	if (lstat(fname, &fi) == 0) {
 	    if ((fi.st_mode & S_IFMT) == S_IFDIR)
