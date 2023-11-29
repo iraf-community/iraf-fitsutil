@@ -40,8 +40,10 @@ struct kwdb {
         char *sbuf;             /* pointer to string buffer */
         int hashtbl[NTHREADS];  /* hash table */
 
-        ssize_t (*read)();      /* private file read function */
-        ssize_t (*write)();     /* private file write function */
+                                /* private file read function */
+        ssize_t (*read)(int fd, void *buf, size_t count);
+                                /* private file write function */
+        ssize_t (*write)(int fd, const void *buf, size_t count);
 };
 typedef struct kwdb KWDB;
 

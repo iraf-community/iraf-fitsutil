@@ -1121,8 +1121,8 @@ kwdb_WriteFITS (
 void
 kwdb_SetIO (
     register KWDB *kwdb,
-    ssize_t (*readfcn)(),
-    ssize_t (*writefcn)()
+    ssize_t (*readfcn)(int fd, void *buf, size_t count),
+    ssize_t (*writefcn)(int fd, const void *buf, size_t count)
 )
 {
 	register KWDB *db = (KWDB *) kwdb;

@@ -272,6 +272,11 @@ main (int argc, char **argv)
 	/* read PHU first */
 	kwdb = kwdb_Open("PHU");
 	ncards = kwdb_ReadFITS (kwdb, in, MAXENTRIES, NULL);
+        if (ncards == 0) {
+	    fprintf (stderr, "Error: Cannot read PHU\n");
+	    fflush (stderr);
+	    exit (1);
+	}
 
 	if (kwdb_Lookup (kwdb, "SIMPLE",0) == 0) {
 	    /* We have a FITS file with no PHU, rewind */
@@ -404,7 +409,7 @@ getheader (
     char	   *type 	/* Extension type */
 )
 {
-	int	ncards, hsize, hpos, in_off;
+	int	ncards, hsize, hpos;
 	int	nbh, bks, i, recsize;
 	char    *s, *p;
 	register struct	_modebits *mp;
@@ -491,10 +496,10 @@ getheader (
 	s = kwdb_GetValue (kwdb, "FG_FUGRP");	
 	get_gid (s, fh);
 
-	in_off = lseek (in, 0, SEEK_CUR); 
+	(void) lseek (in, 0, SEEK_CUR); 
 	/* Calculate header checksum only if the CHECKSUM keyword exists */
 	if (kwdb_GetValue (kwdb, "CHECKSUM") != NULL && sums == YES) {
-	    in_off = lseek (in, hpos, SEEK_SET); 
+	    (void) lseek (in, hpos, SEEK_SET); 
 	    nbh = (ncards + 1 + 35)/36;    /* Fblocks of header */
 	    bks = nbh/NBLOCK;
 	    for (i=1; i<=bks; i++) {
@@ -607,7 +612,7 @@ printheader (
     char *type			/* Foreign extn type, (bin, text..) */
 )
 {
-	char	*tp, *ctime();
+	char	*tp;
 
 	tp = ctime (&fh->mtime);
 
@@ -632,7 +637,7 @@ newfile (
 )
 {
 	int	fd;
-	char	*cwd, dirname[MAXLINELEN];
+	char	dirname[MAXLINELEN];
 	int	i, mode, fdirlevel;
 	
 	mode = fh->mode;
@@ -646,7 +651,7 @@ newfile (
 	        dlevel = fdirlevel;
             }
 	    /* See if directory has been created */
-	    cwd = getcwd (dirname, MAXLINELEN);
+	    (void) getcwd (dirname, MAXLINELEN);
 	    strcat (dirname, "/");
 	    strcat (dirname, fname);
 	    if (access (dirname, F_OK)) {
@@ -689,7 +694,8 @@ copyheader (
     pointer kwdb
 )
 {
-	int ep, ncards, hdr_off, i;
+	//int     hdr_off;
+	int     ep, ncards, i;
 	char	card[CARDLEN];
 	
 	/* Change extension to SIMPLE */
@@ -728,7 +734,7 @@ copyheader (
 	kwdb_DeleteEntry (kwdb, ep);
 
 	ncards = kwdb_WriteFITS (kwdb, out);
-	hdr_off = ((ncards + 1 + 35)/36)*36*80;
+	//hdr_off = ((ncards + 1 + 35)/36)*36*80;
 	memset (card, ' ', CARDLEN);
 	for (i = (ncards+1) % 36;  i < 36;  i++)
 	    write (out, card, CARDLEN);
