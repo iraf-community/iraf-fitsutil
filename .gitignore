@@ -2,6 +2,22 @@
 *.d
 _*
 
+*/OBJS.arc.Z
+local/.ssh
+local/.history
+local/.lesshst
+*.orig
+*.bak
+*.OLD
+*.xxx
+uparm
+spool
+spool.*
+_spool.*
+*BAK
+z
+zz
+
 # Object files
 *.o
 *.ko
@@ -19,7 +35,7 @@ _*
 
 # Libraries
 *.lib
-#*.a
+*.a
 *.la
 *.lo
 
@@ -30,12 +46,12 @@ _*
 *.dylib
 
 # Executables
-#*.e
+*.e
 *.exe
 *.out
 *.app
 *.i*86
-#*.x86_64
+*.x86_64
 *.hex
 
 # Debug files
