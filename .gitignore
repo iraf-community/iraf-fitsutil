@@ -17,9 +17,9 @@ _spool.*
 *BAK
 z
 zz
-fpack
-funpack
-sum32
+*/fpack
+*/funpack
+*/sum32
 
 # Object files
 *.o
