@@ -1,3 +1,10 @@
+/* Copyright(c) 1986 Association of Universities for Research in Astronomy Inc.
+ */
+
+/*
+ * CHECKSUM - Checksum utilities.
+ */
+
 /* Explicitly exclude those ASCII characters that fall between the
  * upper and lower case alphanumerics (<=>?@[\]^_`) from the encoding.
  * Which is to say that only the digits 0-9, letters A-Z, and letters
@@ -10,6 +17,18 @@ unsigned exclude[NX] = { 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
 int offset = 0x30;		/* ASCII 0 (zero) character */
 
 
+void checksum (unsigned char *buf, int length,
+               unsigned short *sum16, unsigned int *sum32);
+
+void char_encode (unsigned int value, char *ascii,
+                  int nbytes, int permute);
+unsigned int add_1s_comp (unsigned int u1, unsigned int u2);
+unsigned int addcheck (unsigned int *sum, char *array, int length);
+unsigned int addcheck32 (unsigned int *sum, char *array, int length);
+unsigned int addcheck1 (unsigned int *sum, char *array, int length);
+unsigned int addcheck2 (unsigned int *sum, char *array, int length);
+
+
 /* CHECKSUM -- Increment the checksum of a character array.  The
  * calling routine must zero the checksum initially.  Shorts are
  * assumed to be 16 bits, ints 32 bits.
@@ -17,11 +36,13 @@ int offset = 0x30;		/* ASCII 0 (zero) character */
 
 /* Internet checksum algorithm, 16/32 bit unsigned integer version:
  */
-checksum (buf, length, sum16, sum32)
-unsigned char	*buf;
-int		length;
-unsigned short	*sum16;
-unsigned int	*sum32;
+void
+checksum (
+    unsigned char	*buf,
+    int		        length,
+    unsigned short	*sum16,
+    unsigned int	*sum32
+)
 {
 	int	 	len, remain, i;
 	unsigned int	hi, lo, hicarry, locarry, tmp16;
@@ -97,12 +118,13 @@ unsigned int	*sum32;
  * To invert the encoding, simply subtract the offset from each byte
  * and pass the resulting string to checksum.
  */
-
-char_encode (value, ascii, nbytes, permute)
-unsigned int	value;
-char		*ascii;	/* at least 17 characters long */
-int		nbytes;
-int		permute;
+void
+char_encode (
+    unsigned int value,
+    char	 *ascii,	/* at least 17 characters long */
+    int		 nbytes,
+    int		 permute
+)
 {
 	int	byte, quotient, remainder, ch[4], check, i, j, k;
 	char	asc[32];
@@ -157,8 +179,11 @@ int		permute;
  * the same thing using checksum(), but this is a little more obvious.
  * To subtract, just complement (~) one of the arguments.
  */
-unsigned int add_1s_comp (u1, u2)
-unsigned int	u1, u2;
+unsigned int
+add_1s_comp (
+    unsigned int u1,
+    unsigned int u2
+)
 {
 	unsigned int	hi, lo, hicarry, locarry;
 
@@ -185,13 +210,14 @@ unsigned int	u1, u2;
  *                               *
  *********************************/
 
-
 /* Internet (1's complement) checksum:
  */
-unsigned int addcheck (sum, array, length)
-unsigned int *sum;
-char *array;
-int length;
+unsigned int
+addcheck (
+    unsigned int *sum,
+    char *array,
+    int length
+)
 {
 	register int i;
 	unsigned short *iarray;
@@ -214,10 +240,12 @@ int length;
 
 /* Internet checksum, 32 bit unsigned integer version:
  */
-unsigned int addcheck32 (sum, array, length)
-unsigned int *sum;
-char *array;
-int length;
+unsigned int
+addcheck32 (
+    unsigned int *sum,
+    char *array,
+    int length
+)
 {
 	register int i;
 	unsigned int *iarray;
@@ -247,10 +275,12 @@ int length;
 
 /* ICE 16 bit microcode checksum:
  */
-unsigned int addcheck1 (sum, array, length)
-unsigned int *sum;
-char *array;
-int length;
+unsigned int
+addcheck1 (
+    unsigned int *sum,
+    char *array,
+    int length
+)
 {
 	register int i;
 
@@ -263,10 +293,12 @@ int length;
 
 /* BSD 16 bit sum algorithm:
  */
-unsigned int addcheck2 (sum, array, length)
-unsigned int *sum;
-char *array;
-int length;
+unsigned int
+addcheck2 (
+    unsigned int *sum,
+    char *array,
+    int length
+)
 {
 	register int i;
 
