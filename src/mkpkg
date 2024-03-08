@@ -14,10 +14,10 @@ relink:
 	$omake x_fxutil.x
 
 	$link x_fxutil.o libpkg.a -lxtools -o xx_fitsutil.e
-        !cc -c $(HSI_CF) fgwrite.c fgread.c sum32.c checksum.c kwdb.c
-	!cc $(HSI_LF) fgwrite.o kwdb.o checksum.o -o fgwrite.e
-	!cc $(HSI_LF) fgread.o kwdb.o checksum.o -o fgread.e
-	!cc $(HSI_LF) sum32.o checksum.o -o sum32
+        $xc -c fgwrite.c fgread.c sum32.c checksum.c kwdb.c
+	$link -h fgwrite.o kwdb.o checksum.o
+	$link -h fgread.o kwdb.o checksum.o
+	$link -h sum32.o checksum.o -o sum32
 	!rm fgwrite.o fgread.o kwdb.o checksum.o sum32.o
 	;
 
