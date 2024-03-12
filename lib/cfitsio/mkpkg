@@ -9,11 +9,9 @@ update:
 	;
 
 link:
-	!cc -c $(HSI_CF) fpack.c
-	!cc -c $(HSI_CF) funpack.c
-	!cc -c $(HSI_CF) fpackutil.c
-	$link fpack.o fpackutil.o -h -lcfitsio -lm 
-	$link funpack.o fpackutil.o -h -lcfitsio -lm
+	$xc -c fpack.c funpack.c fpackutil.c
+	$link -h fpack.o fpackutil.o -lcfitsio
+	$link -h funpack.o fpackutil.o -lcfitsio
 	!rm fpack.o funpack.o fpackutil.o
 	;
 

@@ -11,6 +11,7 @@ install:
 update:
 
 #$update libmef.a
+$call install@cfitsio
 $exit
 
 libmef.a:
