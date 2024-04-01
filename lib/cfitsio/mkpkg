@@ -1,0 +1,28 @@
+# CFITSIO -- Update the CFITSIO library.
+
+$call update
+$exit
+
+update:
+        # If the NOIRLab IRAF version is in use, copy the binaries built
+        # as part of the core system.  Otherwise, build a local CFITSIO
+        # to get the fpack/funpack binaries.
+        $iffile (iraf$vendor/cfitsio/bin.generic)
+            $copy iraf$vendor/cfitsio/bin$(arch)/fpack fitsutilbin$fpack
+            $copy iraf$vendor/cfitsio/bin$(arch)/funpack fitsutilbin$funpack
+        $else
+	    $checkout libcfitsio.a ../
+	    $update   libcfitsio.a
+	    $checkin  libcfitsio.a ../
+        $endif
+	;
+
+libcfitsio.a:
+	# cheat and use Makefile....
+	!(CFLAGS='$(HSI_CF) $(HSI_LF)'; ./configure; make; make fpack funpack)
+        $move libcfitsio.a fitsutilbin$libcfitsio.a
+        $move fpack fitsutilbin$fpack
+        $move funpack fitsutilbin$funpack
+	!make clean
+        !rm Makefile cfitsio.pc config.log config.status
+	;

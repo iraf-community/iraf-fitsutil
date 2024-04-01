@@ -1,0 +1,12 @@
+prefix=/opt/iraf/extern-all/fitsutil/lib/cfitsio
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: cfitsio
+Description: FITS File Subroutine Library
+URL: https://heasarc.gsfc.nasa.gov/fitsio/
+Version: 4.4.0
+Libs: -L${libdir} -lcfitsio
+Libs.private: -lcurl -lz  -lm
+Cflags: -I${includedir}
