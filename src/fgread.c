@@ -85,7 +85,7 @@ struct fheader {
 	int	dirlevel;
 	long	size;
 	long	hsize;
-	long	mtime;
+	time_t	mtime;
 	long	chksum;
 	int	linkflag;
 	char	linkname[NAMSIZ];
