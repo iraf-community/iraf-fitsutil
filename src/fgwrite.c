@@ -71,8 +71,8 @@ struct fheader {
 	int	gid;
 	int	isdir;
 	long	size;
-	long	mtime;
-	long	ctime;
+	time_t	mtime;
+	time_t	ctime;
 	long	chksum;
 	int	linkflag;
 	char	linkname[NAMSIZ];
