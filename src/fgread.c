@@ -366,7 +366,7 @@ main (int argc, char **argv)
 		    if (sum32 > 0 && sums == YES) {
 		        if (debug) 
 			    printf("CHECKSUM: %d\n",sum32);
-		        if (sum32 != -1 && ftype != FITS_MEF) { 
+		        if (int(sum32) != -1 && ftype != FITS_MEF) { 
 			    fprintf (stderr,
 			       "**** Checksum error in extension %d (%s)\n",
 			       count, fh.name);
