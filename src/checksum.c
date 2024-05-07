@@ -126,7 +126,8 @@ char_encode (
     int		 permute
 )
 {
-	int	byte, quotient, remainder, ch[4], check, i, j, k;
+	int	byte, quotient, remainder, check, i, j, k;
+        unsigned int ch[4];
 	char	asc[32];
 
 	for (i=0; i < nbytes; i++) {
@@ -248,8 +249,8 @@ addcheck32 (
 )
 {
 	register int i;
-	unsigned int *iarray;
-	int	 len, carry=0, newcarry=0;
+	unsigned int *iarray, carry=0;
+	int	 len, newcarry=0;
 
 	iarray = (unsigned int *) array;
 	len = length / 4;
