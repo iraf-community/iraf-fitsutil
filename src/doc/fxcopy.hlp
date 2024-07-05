@@ -38,18 +38,18 @@ the first extension two as the second extension and so on.
 EXAMPLES
 1. To put together all of the FITS files starting with 'f' into one new output
 file.
-
+.nf
 	im> fxcopy f*.fits bigf.fits new_file=yes
-
+.fi
 2. To copy extensions 1,3,5 from input file g10.fits into a new file. If you 
 want to append to an existent file, set 'new_file = no'.
-
+.nf
 	im> fxcopy g10.fits g3.fit groups="1,3,5" new_file=yes
-
+.fi
 3. Selected extensions from various input files.
-
+.nf
 	im> fxcopy fa.fits[2],fb.fits[5],fb.fits[7] fall.fits
-
+.fi
 .ih
 BUGS
 Fxcopy does not accept sections in the filename nor extension numbers. 

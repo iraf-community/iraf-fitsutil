@@ -38,14 +38,15 @@ gzip command.
 This task is a wrapper script for the CFITSIO funpack command.
 .ih
 EXAMPLES
-.nf
+
 1. Uncompress a tile compressed file:
 
+.nf
 	im> funpack file3.fits.fz
-
-   The output file is: file3.fits
-
 .fi
+
+The output file is "file3.fits".
+
 .ih
 BUGS
 .ih

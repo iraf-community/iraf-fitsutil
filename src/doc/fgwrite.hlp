@@ -132,17 +132,18 @@ The file modification GMT time.
 .le
 .ih
 EXAMPLES
-1) Creates a MEF file 'mef.fits' with the default setup.
+1. Creates a MEF file 'mef.fits' with the default setup.
+.nf
+  cl> fgwrite file1.for,test.c,obs.log mef.fits
+.fi
 
-	cl> fgwrite file1.for,test.c,obs.log mef.fits
-
-2) Create an archive of the current directory and its subdirectories
+2. Create an archive of the current directory and its subdirectories
    excluding any symbolic links.
-   
+.nf
    cl> fgwrite . ../zzd_arc.fits exclude=s checksum=yes
-   
-   The ckecksum option is set, so the keyword CHECKSUM, DATASUM and
-   CHECKVER will be present in all unit headers.
+.fi
+The ckecksum option is set, so the keyword CHECKSUM, DATASUM and
+CHECKVER will be present in all unit headers.
 .ih
 BUGS
 .ih

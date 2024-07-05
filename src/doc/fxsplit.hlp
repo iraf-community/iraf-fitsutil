@@ -21,17 +21,18 @@ FITS files. The output file names are similar to the input file but they
 will have a count number appended to the root name.
 .ih
 EXAMPLES
-.nf
 1. Split a MEF file that have 2 extensions.
 
+.nf
 	im> fxsplit file3.fits
+.fi
 
    The output file are: file30.fits, file31.fits file32.fits	 
 
 2. To split 2 or more MEF files.
 
+.nf
 	im> fxsplit g10.fits,msc.fits 
-
 .fi
 .ih
 BUGS

@@ -31,9 +31,9 @@ so treated will be reported as "sum_zeroed" in the task output.  The file
 size in bytes is also reported.
 .ih
 EXAMPLES
-.nf
 1. Report the 1's complement checksum for a list of files:
 
+.nf
 	fitsutil> sum32 *.fits
 	sum_zeroed       584640 test1.fits.fz
 	1363490151       532800 test2.fits

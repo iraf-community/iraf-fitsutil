@@ -54,8 +54,9 @@ we need to which kind of image we want as output:
 
 .fi
 2. To copy a portion of an image:
-
+.nf
 	cl> fxconvert image[10:20,*] subimage.fits
+.fi
 
 3. To copy several images. The 'imtype' setting is necessary to dot it only
 once until another image type is desire as output. After the reset, a 
@@ -69,13 +70,16 @@ once until another image type is desire as output. After the reset, a
 .fi
 4. To trim an image:
 
+.nf
+
 	cl> fxconvert image[10:20,*] image
+.fi
 
 In the above example the specified section of the input image replaces the
 original input image.  To trim several images using an image template:
-
+.nf
 	cl> fxconvert frame*[1:512,1:512] frame*
-
+.fi
 In this example all images beginning with "frame" are trimmed to 512 x 512.
 
 5. To copy a set of images to a new directory. Notice that the output
@@ -84,9 +88,13 @@ necessarily be the input type.
 
 .nf
 	cl> fxconvert image* directory
-			or
+.fi
+or
+.nf
 	cl> fxconvert image* directory$
-			or
+.fi
+or
+.nf
 	cl> fxconvert image* osdirectory
 .fi
 
