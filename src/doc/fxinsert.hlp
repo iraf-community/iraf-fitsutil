@@ -30,20 +30,23 @@ FITS extensions are numbered from zero -as the primary unit, with one as
 the first extension two as the second extension and so on.
 .ih
 EXAMPLES
-.nf
 1. Insert group 3 from input.fits after group 1 from output.fits file.
 
+.nf
 	im> fxinsert input.fits[3] output.fits[1]
+.fi
 
 2. To insert extensions 1,3,5 from input file g10.fits after group 5 from
    g30.fits file.
 
+.nf
 	im> fxinsert g10.fits g30.fits[5] groups="1,3,5"
+.fi
 
 3. Insert files and extensions.
 
+.nf
 	im> fxinsert fa.fits,fb.fits[5],fc.fits foutput.fits[3]
-
 .fi
 .ih
 BUGS

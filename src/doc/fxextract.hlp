@@ -45,9 +45,9 @@ EXAMPLES
 1. To extract extension 2,4,5 from a file and not produce a PHU for
 each of them. The output files will be extf2.fits, extf4.fits and 
 extf5.fits.
-
+.nf
 	im> fxextract mef.fits extf.fits groups=2,4,5 phu=no
-
+.fi
 .ih
 BUGS
 .ih

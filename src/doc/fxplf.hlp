@@ -30,9 +30,9 @@ created before appending the BINTABLE extension.
 EXAMPLES
 1. To put together all of the Pixel list files starting with 'f'
 into one new output FITS file.
-
+.nf
 	im> fxplf f*.pl bigplf.fits 
-
+.fi
 .ih
 BUGS
 Fxcopy does not accept sections in the filename nor extension numbers. 

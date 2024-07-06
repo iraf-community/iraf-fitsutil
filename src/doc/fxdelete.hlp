@@ -30,20 +30,22 @@ Notice that if you delete the PHU (group zero), fxdelete will not create
 a dummy PHU on the modified file.
 .ih
 EXAMPLES
-.nf
 1. Delete group 3 from input.fits.
-
+.nf
 	im> fxdelete input.fits[3]
+.fi
 
 2. To delete extensions 1,3,5 from input file g10.fits.
+.nf
 
 	im> fxdelete g10.fits groups="1,3,5"
+.fi
 
 3. Delete extensions. Notice that for those files without an extension, the
    group extension list applies.
+.nf
 
 	im> fxdelete fa.fits,fb.fits[5],fc.fits groups="1,3,4"
-
 .fi
 .ih
 BUGS

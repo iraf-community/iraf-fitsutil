@@ -65,21 +65,25 @@ consist of all subsequent extensions until an EHU is encountered which
 starts a new file.
 .ih
 EXAMPLES
-1) Restore extension 2 and 5 from the MEF file 'mef.fits'. First look at
+1. Restore extension 2 and 5 from the MEF file 'mef.fits'. First look at
 listing for the exact extension numbers.
 .nf
 
    cl> fgread mef.fits "" "" extract- 
    cl> fgread mef.fits 2,5 ""
 
-   Notice the double quote symbols to indicate a null list of output
-   files since we want to extract extension 2 and 5.
-
 .fi
-2) Extract 'log1.txt', 'log2.txt' and 'obs23.fits' extensions from the
+
+Notice the double quote symbols to indicate a null list of output
+files since we want to extract extension 2 and 5.
+
+2. Extract 'log1.txt', 'log2.txt' and 'obs23.fits' extensions from the
 input MEF file.
 
+.nf
    cl> fgread mef.fits "" log1.txt,log2.txt,obs23.fits
+.fi
+
 .ih
 BUGS
 .ih
