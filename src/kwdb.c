@@ -362,7 +362,7 @@ kwdb_SetValue (
 
 	oldval = db->sbuf + itp->value;
 	memset (oldval, 0, itp->vallen);
-	if (strlen(value) > itp->vallen) {
+	if ((int)strlen(value) > itp->vallen) {
 	    itp->value = addstr (db, value);
 	    itp->vallen = strlen (value);
 	} else
@@ -394,7 +394,7 @@ kwdb_SetComment (
 
 	oldcom = db->sbuf + itp->comment;
 	memset (oldcom, 0, itp->comlen);
-	if (strlen(comment) > itp->comlen) {
+	if ((int)strlen(comment) > itp->comlen) {
 	    itp->comment = addstr (db, comment);
 	    itp->comlen = strlen (comment);
 	} else
@@ -448,7 +448,7 @@ kwdb_SetType (
 
 	oldtype = db->sbuf + itp->type;
 	memset (oldtype, 0, itp->typelen);
-	if (strlen(type) > itp->typelen) {
+	if ((int)strlen(type) > itp->typelen) {
 	    itp->type = addstr (db, type);
 	    itp->typelen = strlen (type);
 	} else
