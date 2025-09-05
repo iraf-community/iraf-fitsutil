@@ -77,7 +77,8 @@ int     kwdb_UpdateFITS (register KWDB *kwdb, char *filename,
                          int update, int extend, int npad);
 int     kwdb_WriteFITS (KWDB *kwdb, int fd);
 void    kwdb_SetIO (register KWDB *kwdb,
-                    ssize_t (*readfcn)(), ssize_t (*writefcn)());
+                    ssize_t (*readfcn)(int,  void *, size_t),
+		    ssize_t (*writefcn)(int,  const void *, size_t));
 
 /* Compatibility garbage. */
 #ifndef SEEK_SET
